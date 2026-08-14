@@ -12,10 +12,14 @@ permissionset 50100 "Product Visual View"
         tabledata "Item Attribute Value" = R,
         tabledata "Item Attribute Value Mapping" = R,
         tabledata "Extended Text Header" = R,
+        tabledata "Extended Text Line" = R,
+        tabledata "Item Category" = R,
+        tabledata "Company Information" = R,
         tabledata "Stockkeeping Unit" = R,
         tabledata "Default Dimension" = R,
         tabledata Location = R,
         tabledata "Tenant Media" = R,
         page "Product Visual Card" = X,
+        page "Product Webshop" = X,
         codeunit "Product Visual Data" = X;
 }

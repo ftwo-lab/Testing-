@@ -61,11 +61,87 @@ codeunit 50100 "Product Visual Data"
         Related := BuildRelated(ItemRec);
 
         Clear(Root);
+        Root.Add('view', 'product');
+        Root.Add('showBack', false);
+        Root.Add('shopName', GetShopName());
         Root.Add('header', Header);
         Root.Add('groups', GroupsArray);
         Root.Add('related', Related);
         Root.WriteTo(JsonText);
         exit(JsonText);
+    end;
+
+    procedure BuildProductJson(Item: Record Item; ShowBack: Boolean): Text
+    var
+        Root: JsonObject;
+        JsonText: Text;
+        Token: JsonToken;
+    begin
+        JsonText := BuildProductJson(Item);
+        if Root.ReadFrom(JsonText) then begin
+            if Root.Get('showBack', Token) then
+                Root.Replace('showBack', ShowBack)
+            else
+                Root.Add('showBack', ShowBack);
+            Root.WriteTo(JsonText);
+        end;
+        exit(JsonText);
+    end;
+
+    procedure BuildCatalogJson(): Text
+    var
+        ItemRec: Record Item;
+        ItemCategory: Record "Item Category";
+        Root: JsonObject;
+        Products: JsonArray;
+        Product: JsonObject;
+        JsonText: Text;
+        ItemCount: Integer;
+        CategoryName: Text;
+    begin
+        Root.Add('view', 'catalog');
+        Root.Add('shopName', GetShopName());
+
+        ItemRec.SetRange(Blocked, false);
+        if ItemRec.FindSet() then
+            repeat
+                ItemCount += 1;
+                if ItemCount <= 48 then begin
+                    ItemRec.CalcFields(Inventory);
+                    CategoryName := ItemRec."Item Category Code";
+                    if (ItemRec."Item Category Code" <> '') and ItemCategory.Get(ItemRec."Item Category Code") then
+                        if ItemCategory.Description <> '' then
+                            CategoryName := ItemCategory.Description;
+                    Clear(Product);
+                    Product.Add('no', ItemRec."No.");
+                    Product.Add('description', ItemRec.Description);
+                    Product.Add('description2', ItemRec."Description 2");
+                    Product.Add('itemCategory', ItemRec."Item Category Code");
+                    Product.Add('categoryName', CategoryName);
+                    Product.Add('unitPrice', Format(ItemRec."Unit Price"));
+                    Product.Add('unitPriceValue', ItemRec."Unit Price");
+                    Product.Add('inventory', Format(ItemRec.Inventory));
+                    Product.Add('inventoryValue', ItemRec.Inventory);
+                    Product.Add('baseUom', ItemRec."Base Unit of Measure");
+                    Product.Add('type', Format(ItemRec.Type));
+                    Product.Add('picture', GetPictureDataUrl(ItemRec, 180000));
+                    Products.Add(Product);
+                end;
+            until (ItemRec.Next() = 0) or (ItemCount >= 48);
+
+        Root.Add('productCount', ItemCount);
+        Root.Add('products', Products);
+        Root.WriteTo(JsonText);
+        exit(JsonText);
+    end;
+
+    local procedure GetShopName(): Text
+    var
+        CompanyInformation: Record "Company Information";
+    begin
+        if CompanyInformation.Get() and (CompanyInformation.Name <> '') then
+            exit(CompanyInformation.Name);
+        exit('Product Webshop');
     end;
 
     local procedure IncludeField(FldRef: FieldRef): Boolean
@@ -245,13 +321,52 @@ codeunit 50100 "Product Visual Data"
         Header.Add('unitCost', Format(ItemRec."Unit Cost"));
         Header.Add('inventory', Format(ItemRec.Inventory));
         Header.Add('vendorNo', ItemRec."Vendor No.");
-        Header.Add('picture', GetPictureDataUrl(ItemRec));
+        Header.Add('picture', GetPictureDataUrl(ItemRec, 900000));
         Header.Add('fieldCount', FieldCount);
         Header.Add('customFieldCount', CustomFieldCount);
+        Header.Add('longDescription', GetLongDescription(ItemRec));
+        Header.Add('commonItemNo', ItemRec."Common Item No.");
+        Header.Add('inventoryValue', ItemRec.Inventory);
+        Header.Add('unitPriceValue', ItemRec."Unit Price");
+        Header.Add('categoryName', GetCategoryName(ItemRec));
         exit(Header);
     end;
 
-    local procedure GetPictureDataUrl(ItemRec: Record Item): Text
+    local procedure GetCategoryName(ItemRec: Record Item): Text
+    var
+        ItemCategory: Record "Item Category";
+    begin
+        if ItemRec."Item Category Code" = '' then
+            exit('');
+        if ItemCategory.Get(ItemRec."Item Category Code") then
+            if ItemCategory.Description <> '' then
+                exit(ItemCategory.Description);
+        exit(ItemRec."Item Category Code");
+    end;
+
+    local procedure GetLongDescription(ItemRec: Record Item): Text
+    var
+        ExtendedTextLine: Record "Extended Text Line";
+        Builder: TextBuilder;
+        LineCount: Integer;
+    begin
+        ExtendedTextLine.SetRange("Table Name", ExtendedTextLine."Table Name"::Item);
+        ExtendedTextLine.SetRange("No.", ItemRec."No.");
+        if ExtendedTextLine.FindSet() then
+            repeat
+                LineCount += 1;
+                if LineCount <= 25 then begin
+                    if Builder.Length() > 0 then
+                        Builder.Append(' ');
+                    Builder.Append(ExtendedTextLine.Text);
+                end;
+            until ExtendedTextLine.Next() = 0;
+        if Builder.Length() > 0 then
+            exit(Builder.ToText());
+        exit(ItemRec."Description 2");
+    end;
+
+    local procedure GetPictureDataUrl(ItemRec: Record Item; MaxBase64Len: Integer): Text
     var
         TenantMedia: Record "Tenant Media";
         Base64Convert: Codeunit "Base64 Convert";
@@ -273,7 +388,7 @@ codeunit 50100 "Product Visual Data"
         Base64Text := Base64Convert.ToBase64(InStr);
         if Base64Text = '' then
             exit('');
-        if StrLen(Base64Text) > 900000 then
+        if StrLen(Base64Text) > MaxBase64Len then
             exit('');
         if TenantMedia."Mime Type" = '' then
             exit('data:image/png;base64,' + Base64Text);

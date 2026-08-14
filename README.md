@@ -1,36 +1,34 @@
-# Visual Product Catalog for Business Central
+# Product Webshop for Business Central
 
-A Business Central extension that shows one item (product) in a website-style page: picture, key facts, **every standard and custom field** on the Item record, and related data (attributes, variants, units, inventory by location, and more).
+An AL extension that shows Business Central items in a **webshop** layout inside BC — a product grid plus a storefront-style product page.
+
+It does not replace Shopify or an external storefront. It is a visual shop you open in Business Central so you can see product information the way a website would show it.
 
 ## What you get
 
-From **Item Card** or **Item List**, use **Visual Product View**.
+**Product Webshop** (Tell Me: `Product Webshop`)
 
-The page includes:
+- Catalog grid with picture, name, price, category, and stock
+- Search and category chips
+- Click a product to open a webshop product page
 
-- Product hero: picture, number, description, blocked/active, type, category, inventory, price, cost
-- All Item table fields, including per-tenant custom fields (50,000–99,999) and extension fields (1,000,000+) such as Master SKU No. or Product Family Code
-- Search, **Hide empty**, and **Custom fields only**
-- Related records: attributes, variants, units of measure, item references, translations, inventory by location, SKUs, default dimensions, extended texts
+**Product page**
 
-## Install in Business Central
+- Large picture, SKU, price, in-stock badge, description
+- Overview, Specifications, and All product data tabs
+- Every Item field, including custom and extension fields
+- Related data: attributes, variants, units, references, inventory by location, and more
+- **Open Item Card** to return to the standard BC form
+
+From **Item Card** or **Item List** use **View in Webshop** or **Product Webshop**.
+
+## Install
 
 1. Open this folder in Visual Studio Code with the **AL Language** extension.
-2. **AL: Download symbols** against your sandbox (credentials in `.vscode/launch.json`).
-3. **AL: Package** or **Command+F5 / Ctrl+F5** to publish.
-4. In BC, search **Permission Sets**, open **Visual Product View**, and assign it to the users who should open the page.
-5. Open an item → **Visual Product View**.
+2. Download symbols for your sandbox and publish the app.
+3. Assign permission set **Visual Product View**.
+4. Search Tell Me for **Product Webshop**.
 
-You can also search Tell Me for **Visual Product View** and select an item.
+Object IDs are **50100–50149**. Change them if that range is already used.
 
-## Objects
-
-| ID | Type | Name |
-| --- | --- | --- |
-| 50100 | Page | Product Visual Card |
-| 50100 | Codeunit | Product Visual Data |
-| 50100 | Permission set | Product Visual View |
-| 50101 / 50102 | Page extensions | Item Card / Item List |
-| — | Control add-in | ProductVisualViewer |
-
-If 50100–50149 clashes with another app in your environment, change `idRanges` in `app.json` and the object IDs to a free range.
+The catalog shows up to 48 non-blocked items. Open a single item with **View in Webshop** if you need a product that is not in that first page of the catalog.

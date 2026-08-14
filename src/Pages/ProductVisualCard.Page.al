@@ -3,7 +3,7 @@ page 50100 "Product Visual Card"
     Caption = 'Visual Product View';
     PageType = Card;
     ApplicationArea = All;
-    UsageCategory = Lists;
+    UsageCategory = None;
     SourceTable = Item;
     Editable = false;
     InsertAllowed = false;
@@ -11,7 +11,7 @@ page 50100 "Product Visual Card"
     ModifyAllowed = false;
     DataCaptionFields = "No.", Description;
     AboutTitle = 'Visual Product View';
-    AboutText = 'Shows this Business Central item as a product page, including every standard and custom field plus related records.';
+    AboutText = 'Shows this Business Central item as a webshop product page, including price, stock, picture, and every standard and custom field.';
 
     layout
     {
@@ -26,6 +26,19 @@ page 50100 "Product Visual Card"
                     ControlIsReady := true;
                     SendProductData();
                 end;
+
+                trigger OpenItemCard(ItemNo: Text)
+                var
+                    Item: Record Item;
+                begin
+                    if Item.Get(ItemNo) then
+                        Page.Run(Page::"Item Card", Item);
+                end;
+
+                trigger BackToCatalog()
+                begin
+                    Page.Run(Page::"Product Webshop");
+                end;
             }
         }
     }
@@ -34,6 +47,20 @@ page 50100 "Product Visual Card"
     {
         area(processing)
         {
+            action(OpenWebshop)
+            {
+                ApplicationArea = All;
+                Caption = 'Open Webshop';
+                Image = ShowList;
+                ToolTip = 'Open the product webshop catalog.';
+                Promoted = true;
+                PromotedCategory = Process;
+
+                trigger OnAction()
+                begin
+                    Page.Run(Page::"Product Webshop");
+                end;
+            }
             action(RefreshView)
             {
                 ApplicationArea = All;
