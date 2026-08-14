@@ -1,0 +1,17 @@
+Paste this whole Webshop folder next to your ICS Master app.json.
+
+ICS Master/
+  app.json
+  src/
+  Webshop/     ← this folder
+
+Then in VS Code open ICS Master, download symbols, press F5.
+
+Tell Me after publish:
+- PIM Families → Create default PIM setup
+- PIM Marketplaces → set company names for DE AT ES CH NP CZ
+- PIM Product Enrichment
+- Product Webshop
+
+IDs used: 50351–50355 and 50600–50642.
+If an ID is already used in ICS Master, change only that object number.
