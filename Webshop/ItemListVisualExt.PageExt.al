@@ -2,14 +2,14 @@ pageextension 50354 "Item List Visual Ext" extends "Item List"
 {
     actions
     {
-        addlast(navigation)
+        addlast(processing)
         {
             action(VisualProductView)
             {
                 ApplicationArea = All;
                 Caption = 'View in Webshop';
                 Image = View;
-                ToolTip = 'Open this item as a webshop product page, including every standard and custom field.';
+                ToolTip = 'Open this item as a Shopify-style product page.';
 
                 trigger OnAction()
                 begin
@@ -29,7 +29,7 @@ pageextension 50354 "Item List Visual Ext" extends "Item List"
                 end;
             }
         }
-        addlast(Category_Process)
+        addlast(Promoted)
         {
             actionref(VisualProductView_Promoted; VisualProductView) { }
             actionref(ProductWebshop_Promoted; ProductWebshop) { }

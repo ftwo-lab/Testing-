@@ -4,12 +4,13 @@ page 50352 "Product Webshop"
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Lists;
+    AdditionalSearchTerms = 'Shopify, Webshop, Shop, Storefront, Product catalog, Visual product';
     Editable = false;
     InsertAllowed = false;
     DeleteAllowed = false;
     ModifyAllowed = false;
     AboutTitle = 'Product Webshop';
-    AboutText = 'Browse Business Central items in a webshop layout. Open a product to see its picture, price, stock, and all standard and custom fields.';
+    AboutText = 'Browse Business Central items in a Shopify-style webshop layout.';
 
     layout
     {

@@ -3,7 +3,8 @@ page 50351 "Product Visual Card"
     Caption = 'Visual Product View';
     PageType = Card;
     ApplicationArea = All;
-    UsageCategory = None;
+    UsageCategory = Lists;
+    AdditionalSearchTerms = 'Shopify, Webshop, Shop, Storefront, Visual product';
     SourceTable = Item;
     Editable = false;
     InsertAllowed = false;
