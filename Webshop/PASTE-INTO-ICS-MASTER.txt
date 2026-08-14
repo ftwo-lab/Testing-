@@ -12,6 +12,9 @@ Control add-in paths must then be:
   src/Webshop/scripts/startup.js
   src/Webshop/styles/productViewer.css
 
+PIM architecture (Word, download):
+https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/Webshop/PIM-Architecture.docx
+
 If you instead paste Webshop next to app.json (not inside src), use paths without src/:
   Webshop/scripts/productViewer.js
 
