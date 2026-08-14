@@ -1,6 +1,6 @@
 # PIM in Business Central + company sync + webshop
 
-**Architecture (Word, download):** [Webshop/PIM-Architecture.docx](https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/Webshop/PIM-Architecture.docx)
+**Download Word architecture (direct):** [ICS-Master-PIM-Architecture.docx](https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/ICS-Master-PIM-Architecture.docx)
 
 Markdown (same content, GitHub diagrams): [Webshop/PIM-ARCHITECTURE.md](Webshop/PIM-ARCHITECTURE.md)
 
