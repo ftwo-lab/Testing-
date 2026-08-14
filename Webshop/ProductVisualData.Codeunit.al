@@ -1,4 +1,4 @@
-codeunit 50350 "Product Visual Data"
+codeunit 50633 "Product Visual Data"
 {
     procedure BuildProductJson(Item: Record Item): Text
     var
@@ -149,8 +149,6 @@ codeunit 50350 "Product Visual Data"
         if not FldRef.Active then
             exit(false);
         if FldRef.Class = FieldClass::FlowFilter then
-            exit(false);
-        if FldRef.ObsoleteState = ObsoleteState::Removed then
             exit(false);
         if FldRef.Type in [FieldType::Blob, FieldType::Media, FieldType::MediaSet] then
             exit(false);
