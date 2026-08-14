@@ -1,6 +1,8 @@
 # PIM in Business Central + company sync + webshop
 
-**Architecture (diagrams + design):** [Webshop/PIM-ARCHITECTURE.md](Webshop/PIM-ARCHITECTURE.md)
+**Architecture (Word, download):** [Webshop/PIM-Architecture.docx](https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/Webshop/PIM-Architecture.docx)
+
+Markdown (same content, GitHub diagrams): [Webshop/PIM-ARCHITECTURE.md](Webshop/PIM-ARCHITECTURE.md)
 
 Copy the `Webshop` folder into **ICS Master** and publish. If your AL objects live under `src`, put it at `src/Webshop` and use control add-in paths `src/Webshop/scripts/...` and `src/Webshop/styles/...`. Publish the same app in **every child company** you sync to.
 

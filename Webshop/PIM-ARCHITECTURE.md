@@ -1,5 +1,7 @@
 # PIM architecture for Business Central (ICS Master)
 
+**Word download:** [PIM-Architecture.docx](https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/Webshop/PIM-Architecture.docx)
+
 **App:** ICS Master (publisher ZVG)  
 **Pattern:** Akeneo-style product information management **inside** Dynamics 365 Business Central, plus a Shopify-style storefront control add-in.  
 **Rule:** PIM enriches the **Item**. It does not replace the ERP Item Card, inventory, costing, or documents.
