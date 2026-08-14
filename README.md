@@ -1,34 +1,23 @@
-# Add Product Webshop to ICS Master (ZVG)
+# PIM in Business Central (Akeneo-style) + Webshop
 
-Copy the **`Webshop`** folder into the **ICS Master** app root (the folder that already has this `app.json`). Do not create a second app and do not change your app id.
+Copy the whole `Webshop` folder into **ICS Master** (next to `app.json`). Publish ICS Master.
 
-```text
-ICS Master/
-  app.json
-  src/                 ← your existing objects
-  Webshop/             ← paste this folder here
-```
+## What it is
 
-Your `idRanges` already include `50350–50399`. These objects use that range:
+- **PIM** = product information (title, brand, descriptions, specs, SEO), like Akeneo families/attributes.
+- **Webshop** = storefront that shows **only published PIM products**, not costing/planning/warehouse fields.
 
-| ID | Object |
-| --- | --- |
-| 50350 | Codeunit Product Visual Data |
-| 50351 | Page Product Visual Card |
-| 50352 | Page Product Webshop |
-| 50353 | Page extension Item Card |
-| 50354 | Page extension Item List |
-| 50355 | Permission set Visual Product View |
+## After publish
 
-If any of those IDs are already used in ICS Master, change only that object’s number to another free ID in `50350–50399` or `50600–50700`.
+1. Tell Me → **PIM Families** → **Create default PIM setup**
+2. Tell Me → **PIM Product Enrichment** → open an item
+3. Set **PIM Family** = DEFAULT, fill Title / Description / other attributes
+4. Enable **Published to Webshop**
+5. Tell Me → **Product Webshop**
 
-## Publish ICS Master
+Also on Item Card: group **PIM**, actions **PIM Enrichment** and **View in Webshop**.
 
-1. Open the **ICS Master** folder in VS Code.
-2. Run **AL: Download symbols**.
-3. Press **F5** to publish ICS Master (version can stay `1.0.0.3` or bump to `1.0.0.4`).
-4. In Business Central: Tell Me → **Product Webshop**.
+## Search in Tell Me
 
-Or open an **Item Card** → **View in Webshop**.
-
-If JavaScript does not load, `Webshop` must sit next to `app.json`, because the control add-in paths are `Webshop/scripts/...` and `Webshop/styles/...`.
+- PIM Families, PIM Attributes, PIM Categories, PIM Product Enrichment
+- Product Webshop

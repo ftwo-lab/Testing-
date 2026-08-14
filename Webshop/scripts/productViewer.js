@@ -86,7 +86,10 @@ function renderCatalog(data) {
     var grid = document.createElement('div');
     grid.className = 'product-grid';
     if (!products.length) {
-        wrap.appendChild(note('No products match this search.'));
+        if (!(data.products || []).length)
+            wrap.appendChild(note('No published PIM products. Open PIM Product Enrichment, fill attributes, then enable Published to Webshop.'));
+        else
+            wrap.appendChild(note('No products match this search.'));
     } else {
         products.forEach(function (p) { grid.appendChild(productCard(p)); });
         wrap.appendChild(grid);
@@ -281,8 +284,8 @@ function renderTabs() {
     var tabs = document.createElement('div');
     tabs.className = 'tabs';
     tabs.appendChild(tabBtn('Description', 'overview'));
-    tabs.appendChild(tabBtn('Specifications', 'specs'));
-    tabs.appendChild(tabBtn('All Business Central data', 'all'));
+    tabs.appendChild(tabBtn('PIM attributes', 'specs'));
+    tabs.appendChild(tabBtn('Shopify mapping', 'all'));
     return tabs;
 }
 
@@ -298,38 +301,21 @@ function tabBtn(label, id) {
 }
 
 function shopifyRows(data) {
-    var h = data.header || {};
-    var variants = (data.related && data.related.variants) || [];
-    var attrs = (data.related && data.related.attributes) || [];
-    var handle = String(h.description || h.no || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    var status = h.blocked ? 'draft' : 'active';
-    var rows = [
-        ['title', 'Item.Description', h.description],
-        ['handle', 'From description / No.', handle],
-        ['vendor', 'Vendor Name / Vendor No.', h.vendorName || h.vendorNo],
-        ['product_type', 'Item Category', h.categoryName || h.itemCategory],
-        ['status', 'Blocked → draft, else active', status],
-        ['body_html', 'Extended text / Description 2', h.longDescription || h.description2],
-        ['variants[0].sku', 'Item No.', h.no],
-        ['variants[0].barcode', 'Common Item No.', h.commonItemNo],
-        ['variants[0].price', 'Unit Price', h.unitPrice],
-        ['variants[0].inventory_quantity', 'Inventory', h.inventory],
-        ['variants[0].option1', 'Base UOM', h.baseUom],
-        ['images[0].src', 'Item Picture', h.picture ? 'Product image' : ''],
-        ['options', 'Item Variants', variants.length ? variants.map(function (v) { return v.code; }).join(', ') : 'Default Title']
-    ];
-    attrs.forEach(function (a) {
-        rows.push(['metafields.' + (a.name || 'attribute'), 'Item Attribute', a.value]);
-    });
-    (data.groups || []).forEach(function (g) {
-        if (g.name !== 'Custom Fields' && g.name !== 'Extension Fields')
-            return;
-        (g.fields || []).forEach(function (f) {
-            if (!isEmptyValue(f.value))
-                rows.push(['metafields.custom.' + (f.name || f.caption), f.caption || f.name, f.value]);
+    if (data.shopifyMap && data.shopifyMap.length)
+        return data.shopifyMap.map(function (r) {
+            return [r.shopify, r.source, r.value];
         });
-    });
-    return rows;
+    var h = data.header || {};
+    return [
+        ['title', 'PIM title', h.description],
+        ['vendor', 'PIM brand', h.vendorName],
+        ['product_type', 'PIM category', h.categoryName || h.itemCategory],
+        ['status', 'PIM Published', h.published ? 'active' : 'draft'],
+        ['body_html', 'PIM description', h.longDescription || h.description2],
+        ['variants[0].sku', 'Item No.', h.no],
+        ['variants[0].price', 'Unit Price', h.unitPrice],
+        ['variants[0].inventory_quantity', 'Inventory', h.inventory]
+    ];
 }
 
 function renderOverview(data) {
@@ -341,33 +327,18 @@ function renderOverview(data) {
     desc.insertAdjacentHTML('beforeend', '<p class="pdp-desc">' + escapeHtml(body) + '</p>');
     wrap.appendChild(desc);
 
-    var map = document.createElement('section');
-    map.className = 'panel';
-    map.innerHTML = '<header><h3>How this looks on Shopify</h3></header>';
-    map.insertAdjacentHTML('beforeend', '<div class="map-note">If this Business Central item is sent to Shopify, Shopify stores it as one product with variants, images, and metafields. This table is that mapping.</div>');
-    var rows = shopifyRows(data).map(function (r) {
-        return '<tr><td>' + escapeHtml(r[0]) + '</td><td>' + escapeHtml(r[1]) + '</td><td>' + escapeHtml(displayVal(r[2])) + '</td></tr>';
-    }).join('');
-    map.insertAdjacentHTML(
-        'beforeend',
-        '<div class="table-wrap"><table class="shop-table"><thead><tr><th>Shopify field</th><th>Business Central source</th><th>Value</th></tr></thead><tbody>' +
-            rows + '</tbody></table></div>'
-    );
-    wrap.appendChild(map);
-
     var details = document.createElement('section');
     details.className = 'panel';
     details.innerHTML = '<header><h3>Product details</h3></header>';
-    var attrs = (data.related && data.related.attributes) || [];
+    var attrs = data.attributes || [];
     var html = '<div class="attr-list">';
-    html += attrRow('Item No. / SKU', data.header.no);
+    html += attrRow('SKU', data.header.no);
     html += attrRow('Title', data.header.description);
-    html += attrRow('Vendor', data.header.vendorName || data.header.vendorNo);
-    html += attrRow('Product type', data.header.categoryName || data.header.itemCategory);
+    html += attrRow('Brand', data.header.vendorName);
+    html += attrRow('Category', data.header.categoryName || data.header.itemCategory);
     html += attrRow('Price', data.header.unitPrice);
     html += attrRow('Inventory', data.header.inventory);
-    html += attrRow('UOM', data.header.baseUom);
-    attrs.forEach(function (a) { html += attrRow(a.name, a.value); });
+    attrs.forEach(function (a) { html += attrRow(a.caption || a.code, a.value); });
     html += '</div>';
     details.insertAdjacentHTML('beforeend', html);
     wrap.appendChild(details);
@@ -381,69 +352,34 @@ function attrRow(name, value) {
 function renderSpecs(data) {
     var panel = document.createElement('section');
     panel.className = 'panel';
-    panel.innerHTML = '<header><h3>Specifications</h3></header>';
-    var filled = [];
-    (data.groups || []).forEach(function (g) {
-        (g.fields || []).forEach(function (f) {
-            if (!isEmptyValue(f.value))
-                filled.push(f);
-        });
-    });
+    panel.innerHTML = '<header><h3>PIM attributes</h3></header>';
+    var attrs = data.attributes || [];
     var wrap = document.createElement('div');
     wrap.className = 'table-wrap';
-    var rows = filled.map(function (f) {
-        return '<tr><td>' + escapeHtml(f.caption || f.name) + '</td><td>' + escapeHtml(f.value) + '</td><td>' + escapeHtml(f.source || '') + '</td></tr>';
+    var rows = attrs.map(function (a) {
+        return '<tr><td>' + escapeHtml(a.group || '') + '</td><td>' + escapeHtml(a.caption || a.code) + '</td><td>' + escapeHtml(a.value) + '</td></tr>';
     }).join('');
-    wrap.innerHTML = '<table class="shop-table"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="3">No filled fields</td></tr>') + '</tbody></table>';
+    wrap.innerHTML = '<table class="shop-table"><thead><tr><th>Group</th><th>Attribute</th><th>Value</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="3">No PIM attribute values. Open PIM Product Enrichment and fill the family attributes.</td></tr>') +
+        '</tbody></table>';
     panel.appendChild(wrap);
     return panel;
 }
 
 function renderAllData(root, data) {
-    var bar = document.createElement('div');
-    bar.className = 'toolbar';
-    var search = document.createElement('input');
-    search.className = 'pvc-search';
-    search.placeholder = 'Search every field…';
-    search.value = productState.search;
-    search.addEventListener('input', function (e) {
-        productState.search = e.target.value;
-        var y = window.scrollY || 0;
-        renderApp();
-        var next = document.querySelector('.pvc-search');
-        if (next) {
-            next.focus();
-            next.setSelectionRange(productState.search.length, productState.search.length);
-        }
-        window.scrollTo(0, y);
-    });
-    bar.appendChild(search);
-    bar.appendChild(toggleBtn('Hide empty', 'filledOnly'));
-    bar.appendChild(toggleBtn('Custom fields only', 'customOnly'));
-    root.appendChild(bar);
-
-    var visible = 0;
-    (data.groups || []).forEach(function (group) {
-        var fields = filterFields(group.fields || []);
-        if (!fields.length)
-            return;
-        visible += 1;
-        root.appendChild(renderGroup(group.name, fields));
-    });
-    if (!visible)
-        root.appendChild(note('No fields match the current search or filters.'));
-
-    var related = data.related || {};
-    root.appendChild(renderRelated('Attributes', related.attributes, ['name', 'value']));
-    root.appendChild(renderRelated('Variants', related.variants, ['code', 'description', 'blocked']));
-    root.appendChild(renderRelated('Units of Measure', related.unitsOfMeasure, ['code', 'qtyPerUnit', 'description']));
-    root.appendChild(renderRelated('Item References', related.references, ['referenceNo', 'referenceType', 'description', 'variantCode']));
-    root.appendChild(renderRelated('Translations', related.translations, ['languageCode', 'description', 'description2']));
-    root.appendChild(renderRelated('Inventory by Location', related.inventoryByLocation, ['locationCode', 'locationName', 'inventory']));
-    root.appendChild(renderRelated('Stockkeeping Units', related.stockkeepingUnits, ['locationCode', 'variantCode', 'replenishmentSystem', 'vendorNo']));
-    root.appendChild(renderRelated('Default Dimensions', related.dimensions, ['dimensionCode', 'dimensionValueCode', 'valuePosting']));
-    root.appendChild(renderRelated('Extended Texts', related.extendedTexts, ['languageCode', 'textNo', 'description']));
+    var panel = document.createElement('section');
+    panel.className = 'panel';
+    panel.innerHTML = '<header><h3>How this looks on Shopify</h3></header>';
+    panel.insertAdjacentHTML('beforeend', '<div class="map-note">Only PIM-enriched fields plus SKU, price, stock, and image are sent to the storefront. ERP fields such as costing and planning stay in Business Central.</div>');
+    var rows = shopifyRows(data).map(function (r) {
+        return '<tr><td>' + escapeHtml(r[0]) + '</td><td>' + escapeHtml(r[1]) + '</td><td>' + escapeHtml(displayVal(r[2])) + '</td></tr>';
+    }).join('');
+    panel.insertAdjacentHTML(
+        'beforeend',
+        '<div class="table-wrap"><table class="shop-table"><thead><tr><th>Shopify field</th><th>PIM / BC source</th><th>Value</th></tr></thead><tbody>' +
+            rows + '</tbody></table></div>'
+    );
+    root.appendChild(panel);
 }
 
 function toggleBtn(label, key) {
