@@ -21,6 +21,12 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
                     ToolTip = 'Show this item in the webshop using PIM data only.';
                 }
             }
+            part(PIMMarketplaces; "PIM Item Marketplaces")
+            {
+                ApplicationArea = All;
+                SubPageLink = "Item No." = field("No.");
+                Caption = 'Sync to companies';
+            }
         }
     }
 
@@ -38,6 +44,20 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
                 trigger OnAction()
                 begin
                     Page.Run(Page::"PIM Product Enrichment", Rec);
+                end;
+            }
+            action(SyncToCompanies)
+            {
+                ApplicationArea = All;
+                Caption = 'Sync to companies';
+                Image = Refresh;
+
+                trigger OnAction()
+                var
+                    PIMCompanySync: Codeunit "PIM Company Sync";
+                begin
+                    PIMCompanySync.SyncItem(Rec."No.");
+                    Message('Sync finished. Check Sync to companies and PIM Sync Log.');
                 end;
             }
             action(VisualProductView)
@@ -66,6 +86,7 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
         addlast(Promoted)
         {
             actionref(PIMEnrichment_Promoted; PIMEnrichment) { }
+            actionref(SyncToCompanies_Promoted; SyncToCompanies) { }
             actionref(VisualProductView_Promoted; VisualProductView) { }
             actionref(ProductWebshop_Promoted; ProductWebshop) { }
         }

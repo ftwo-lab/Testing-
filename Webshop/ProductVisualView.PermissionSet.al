@@ -4,12 +4,17 @@ permissionset 50355 "Product Visual View"
     Caption = 'PIM and Webshop';
     Permissions =
         tabledata Item = RIM,
+        tabledata "Unit of Measure" = RIM,
+        tabledata Company = R,
         tabledata "PIM Attribute Group" = RIMD,
         tabledata "PIM Attribute" = RIMD,
         tabledata "PIM Attribute Option" = RIMD,
         tabledata "PIM Family" = RIMD,
         tabledata "PIM Family Attribute" = RIMD,
         tabledata "PIM Category" = RIMD,
+        tabledata "PIM Marketplace" = RIMD,
+        tabledata "PIM Item Marketplace" = RIMD,
+        tabledata "PIM Sync Log" = RIM,
         tabledata "PIM Product Value" = RIMD,
         tabledata "Company Information" = R,
         tabledata "Tenant Media" = R,
@@ -22,10 +27,14 @@ permissionset 50355 "Product Visual View"
         page "PIM Family Attributes" = X,
         page "PIM Categories" = X,
         page "PIM Product Values" = X,
+        page "PIM Marketplaces" = X,
+        page "PIM Item Marketplaces" = X,
+        page "PIM Sync Log" = X,
         page "PIM Product Enrichment" = X,
         page "Product Visual Card" = X,
         page "Product Webshop" = X,
         codeunit "Product Visual Data" = X,
+        codeunit "PIM Company Sync" = X,
         codeunit "PIM Enrichment" = X,
         codeunit "PIM Install" = X;
 }

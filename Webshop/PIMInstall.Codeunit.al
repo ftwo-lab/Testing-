@@ -44,6 +44,13 @@ codeunit 50634 "PIM Install"
         InsertCategory('MASTER', 'Master catalog', '');
         InsertCategory('CARE', 'Care & hygiene', 'MASTER');
         InsertCategory('MEDICAL', 'Medical', 'MASTER');
+
+        InsertMarketplace('DE', 'Germany', 'DE');
+        InsertMarketplace('AT', 'Austria', 'AT');
+        InsertMarketplace('ES', 'Spain', 'ES');
+        InsertMarketplace('CH', 'Switzerland', 'CH');
+        InsertMarketplace('NP', 'Nonpa', '');
+        InsertMarketplace('CZ', 'Czech Republic', 'CZ');
     end;
 
     local procedure InsertGroup(CodeValue: Code[20]; DescriptionValue: Text[100]; SortOrder: Integer)
@@ -124,5 +131,20 @@ codeunit 50634 "PIM Install"
         Category.Description := DescriptionValue;
         Category."Parent Code" := ParentCode;
         Category.Insert();
+    end;
+
+    local procedure InsertMarketplace(CodeValue: Code[20]; DescriptionValue: Text[100]; CountryCode: Code[10])
+    var
+        Marketplace: Record "PIM Marketplace";
+    begin
+        if Marketplace.Get(CodeValue) then
+            exit;
+        Marketplace.Init();
+        Marketplace.Code := CodeValue;
+        Marketplace.Description := DescriptionValue;
+        Marketplace."Country/Region Code" := CountryCode;
+        Marketplace.Enabled := false;
+        Marketplace."Copy Unit Price" := true;
+        Marketplace.Insert();
     end;
 }
