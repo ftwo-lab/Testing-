@@ -75,6 +75,7 @@ codeunit 50639 "PIM Company Sync"
             InsertTargetItem(MasterItem, TargetItem, Marketplace);
 
         CopyPimValues(ItemNo, Marketplace."Company Name");
+        CopyItemMasterData(MasterItem, Marketplace."Company Name");
     end;
 
     local procedure InsertTargetItem(MasterItem: Record Item; var TargetItem: Record Item; Marketplace: Record "PIM Marketplace")
@@ -105,6 +106,21 @@ codeunit 50639 "PIM Company Sync"
         TargetItem."PIM Family Code" := MasterItem."PIM Family Code";
         TargetItem."PIM Category Code" := MasterItem."PIM Category Code";
         TargetItem."PIM Published" := MasterItem."PIM Published";
+        TargetItem."Item Category Code" := MasterItem."Item Category Code";
+        TargetItem."Search Description" := MasterItem."Search Description";
+        TargetItem."Common Item No." := MasterItem."Common Item No.";
+        TargetItem.GTIN := MasterItem.GTIN;
+        TargetItem."Tariff No." := MasterItem."Tariff No.";
+        TargetItem."Country/Region of Origin Code" := MasterItem."Country/Region of Origin Code";
+        TargetItem."Net Weight" := MasterItem."Net Weight";
+        TargetItem."Gross Weight" := MasterItem."Gross Weight";
+        TargetItem."Unit Volume" := MasterItem."Unit Volume";
+        TargetItem."Sales Unit of Measure" := MasterItem."Sales Unit of Measure";
+        TargetItem."Purch. Unit of Measure" := MasterItem."Purch. Unit of Measure";
+        TargetItem."Item Disc. Group" := MasterItem."Item Disc. Group";
+        TargetItem."Service Item Group" := MasterItem."Service Item Group";
+        TargetItem."Automatic Ext. Texts" := MasterItem."Automatic Ext. Texts";
+        CopyPicture(MasterItem, TargetItem);
         if Marketplace."Copy Unit Price" then
             TargetItem."Unit Price" := MasterItem."Unit Price";
         if Marketplace."Copy Posting Groups" then begin
@@ -257,6 +273,369 @@ codeunit 50639 "PIM Company Sync"
                     TCategory.Insert();
                 end;
             until Category.Next() = 0;
+
+        CopyItemCategories(TargetCompany);
+        CopyItemAttributeSetup(TargetCompany);
+    end;
+
+    local procedure CopyItemMasterData(MasterItem: Record Item; TargetCompany: Text[50])
+    begin
+        CopyItemCategory(MasterItem."Item Category Code", TargetCompany);
+        CopyVariants(MasterItem."No.", TargetCompany);
+        CopyItemUnitsOfMeasure(MasterItem."No.", TargetCompany);
+        CopyTranslations(MasterItem."No.", TargetCompany);
+        CopyExtendedTexts(MasterItem."No.", TargetCompany);
+        CopyItemReferences(MasterItem."No.", TargetCompany);
+        CopyDocumentAttachments(MasterItem."No.", TargetCompany);
+        CopyStandardItemAttributes(MasterItem."No.", TargetCompany);
+    end;
+
+    local procedure CopyPicture(MasterItem: Record Item; var TargetItem: Record Item)
+    var
+        i: Integer;
+        MediaId: Guid;
+    begin
+        if MasterItem.Picture.Count = 0 then
+            exit;
+        for i := 1 to MasterItem.Picture.Count do begin
+            MediaId := MasterItem.Picture.Item(i);
+            if not IsNullGuid(MediaId) then
+                TargetItem.Picture.Insert(MediaId);
+        end;
+    end;
+
+    local procedure CopyItemCategory(CategoryCode: Code[20]; TargetCompany: Text[50])
+    var
+        MasterCat: Record "Item Category";
+        TargetCat: Record "Item Category";
+    begin
+        if CategoryCode = '' then
+            exit;
+        if not MasterCat.Get(CategoryCode) then
+            exit;
+        if MasterCat."Parent Category" <> '' then
+            CopyItemCategory(MasterCat."Parent Category", TargetCompany);
+        TargetCat.ChangeCompany(TargetCompany);
+        if TargetCat.Get(CategoryCode) then
+            exit;
+        TargetCat.Init();
+        TargetCat.Code := MasterCat.Code;
+        TargetCat.Description := MasterCat.Description;
+        TargetCat."Parent Category" := MasterCat."Parent Category";
+        TargetCat.Insert();
+    end;
+
+    local procedure CopyItemCategories(TargetCompany: Text[50])
+    var
+        MasterCat: Record "Item Category";
+    begin
+        if MasterCat.FindSet() then
+            repeat
+                CopyItemCategory(MasterCat.Code, TargetCompany);
+            until MasterCat.Next() = 0;
+    end;
+
+    local procedure CopyVariants(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterVar: Record "Item Variant";
+        TargetVar: Record "Item Variant";
+    begin
+        TargetVar.ChangeCompany(TargetCompany);
+        MasterVar.SetRange("Item No.", ItemNo);
+        if MasterVar.FindSet() then
+            repeat
+                if TargetVar.Get(ItemNo, MasterVar.Code) then begin
+                    TargetVar.Description := MasterVar.Description;
+                    TargetVar."Description 2" := MasterVar."Description 2";
+                    TargetVar.Blocked := MasterVar.Blocked;
+                    TargetVar.Modify();
+                end else begin
+                    TargetVar.Init();
+                    TargetVar."Item No." := ItemNo;
+                    TargetVar.Code := MasterVar.Code;
+                    TargetVar.Description := MasterVar.Description;
+                    TargetVar."Description 2" := MasterVar."Description 2";
+                    TargetVar.Blocked := MasterVar.Blocked;
+                    TargetVar.Insert();
+                end;
+            until MasterVar.Next() = 0;
+    end;
+
+    local procedure CopyItemUnitsOfMeasure(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterUOM: Record "Item Unit of Measure";
+        TargetUOM: Record "Item Unit of Measure";
+    begin
+        MasterUOM.SetRange("Item No.", ItemNo);
+        if MasterUOM.FindSet() then
+            repeat
+                EnsureUnitOfMeasure(MasterUOM.Code, TargetCompany);
+                TargetUOM.ChangeCompany(TargetCompany);
+                if TargetUOM.Get(ItemNo, MasterUOM.Code) then begin
+                    TargetUOM."Qty. per Unit of Measure" := MasterUOM."Qty. per Unit of Measure";
+                    TargetUOM.Length := MasterUOM.Length;
+                    TargetUOM.Width := MasterUOM.Width;
+                    TargetUOM.Height := MasterUOM.Height;
+                    TargetUOM.Cubage := MasterUOM.Cubage;
+                    TargetUOM.Weight := MasterUOM.Weight;
+                    TargetUOM.Modify();
+                end else begin
+                    TargetUOM.Init();
+                    TargetUOM."Item No." := ItemNo;
+                    TargetUOM.Code := MasterUOM.Code;
+                    TargetUOM."Qty. per Unit of Measure" := MasterUOM."Qty. per Unit of Measure";
+                    TargetUOM.Length := MasterUOM.Length;
+                    TargetUOM.Width := MasterUOM.Width;
+                    TargetUOM.Height := MasterUOM.Height;
+                    TargetUOM.Cubage := MasterUOM.Cubage;
+                    TargetUOM.Weight := MasterUOM.Weight;
+                    TargetUOM.Insert();
+                end;
+            until MasterUOM.Next() = 0;
+    end;
+
+    local procedure CopyTranslations(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterTr: Record "Item Translation";
+        TargetTr: Record "Item Translation";
+    begin
+        TargetTr.ChangeCompany(TargetCompany);
+        MasterTr.SetRange("Item No.", ItemNo);
+        if MasterTr.FindSet() then
+            repeat
+                if TargetTr.Get(ItemNo, MasterTr."Language Code", MasterTr."Variant Code") then begin
+                    TargetTr.Description := MasterTr.Description;
+                    TargetTr."Description 2" := MasterTr."Description 2";
+                    TargetTr.Modify();
+                end else begin
+                    TargetTr.Init();
+                    TargetTr."Item No." := ItemNo;
+                    TargetTr."Language Code" := MasterTr."Language Code";
+                    TargetTr."Variant Code" := MasterTr."Variant Code";
+                    TargetTr.Description := MasterTr.Description;
+                    TargetTr."Description 2" := MasterTr."Description 2";
+                    TargetTr.Insert();
+                end;
+            until MasterTr.Next() = 0;
+    end;
+
+    local procedure CopyExtendedTexts(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterHdr: Record "Extended Text Header";
+        TargetHdr: Record "Extended Text Header";
+        MasterLine: Record "Extended Text Line";
+        TargetLine: Record "Extended Text Line";
+    begin
+        TargetHdr.ChangeCompany(TargetCompany);
+        TargetLine.ChangeCompany(TargetCompany);
+
+        MasterHdr.SetRange("Table Name", MasterHdr."Table Name"::Item);
+        MasterHdr.SetRange("No.", ItemNo);
+        if MasterHdr.FindSet() then
+            repeat
+                if not TargetHdr.Get(MasterHdr."Table Name", ItemNo, MasterHdr."Language Code", MasterHdr."Text No.") then begin
+                    TargetHdr.Init();
+                    TargetHdr."Table Name" := MasterHdr."Table Name";
+                    TargetHdr."No." := ItemNo;
+                    TargetHdr."Language Code" := MasterHdr."Language Code";
+                    TargetHdr."Text No." := MasterHdr."Text No.";
+                    TargetHdr.Description := MasterHdr.Description;
+                    TargetHdr."Sales Invoice" := MasterHdr."Sales Invoice";
+                    TargetHdr."Sales Quote" := MasterHdr."Sales Quote";
+                    TargetHdr."Sales Order" := MasterHdr."Sales Order";
+                    TargetHdr.Insert();
+                end else begin
+                    TargetHdr.Description := MasterHdr.Description;
+                    TargetHdr.Modify();
+                end;
+
+                TargetLine.SetRange("Table Name", MasterHdr."Table Name");
+                TargetLine.SetRange("No.", ItemNo);
+                TargetLine.SetRange("Language Code", MasterHdr."Language Code");
+                TargetLine.SetRange("Text No.", MasterHdr."Text No.");
+                TargetLine.DeleteAll();
+
+                MasterLine.SetRange("Table Name", MasterHdr."Table Name");
+                MasterLine.SetRange("No.", ItemNo);
+                MasterLine.SetRange("Language Code", MasterHdr."Language Code");
+                MasterLine.SetRange("Text No.", MasterHdr."Text No.");
+                if MasterLine.FindSet() then
+                    repeat
+                        TargetLine.Init();
+                        TargetLine."Table Name" := MasterLine."Table Name";
+                        TargetLine."No." := ItemNo;
+                        TargetLine."Language Code" := MasterLine."Language Code";
+                        TargetLine."Text No." := MasterLine."Text No.";
+                        TargetLine."Line No." := MasterLine."Line No.";
+                        TargetLine.Text := MasterLine.Text;
+                        TargetLine.Insert();
+                    until MasterLine.Next() = 0;
+            until MasterHdr.Next() = 0;
+    end;
+
+    local procedure CopyItemReferences(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterRef: Record "Item Reference";
+        TargetRef: Record "Item Reference";
+    begin
+        TargetRef.ChangeCompany(TargetCompany);
+        MasterRef.SetRange("Item No.", ItemNo);
+        if MasterRef.FindSet() then
+            repeat
+                if not TargetRef.Get(ItemNo, MasterRef."Variant Code", MasterRef."Unit of Measure", MasterRef."Reference Type", MasterRef."Reference Type No.", MasterRef."Reference No.") then begin
+                    TargetRef.Init();
+                    TargetRef."Item No." := ItemNo;
+                    TargetRef."Variant Code" := MasterRef."Variant Code";
+                    TargetRef."Unit of Measure" := MasterRef."Unit of Measure";
+                    TargetRef."Reference Type" := MasterRef."Reference Type";
+                    TargetRef."Reference Type No." := MasterRef."Reference Type No.";
+                    TargetRef."Reference No." := MasterRef."Reference No.";
+                    TargetRef.Description := MasterRef.Description;
+                    TargetRef.Insert();
+                end else begin
+                    TargetRef.Description := MasterRef.Description;
+                    TargetRef.Modify();
+                end;
+            until MasterRef.Next() = 0;
+    end;
+
+    local procedure CopyDocumentAttachments(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterAtt: Record "Document Attachment";
+        TargetAtt: Record "Document Attachment";
+    begin
+        TargetAtt.ChangeCompany(TargetCompany);
+        MasterAtt.SetRange("Table ID", Database::Item);
+        MasterAtt.SetRange("No.", ItemNo);
+        if not MasterAtt.FindSet() then
+            exit;
+
+        repeat
+            TargetAtt.Reset();
+            TargetAtt.ChangeCompany(TargetCompany);
+            TargetAtt.SetRange("Table ID", Database::Item);
+            TargetAtt.SetRange("No.", ItemNo);
+            TargetAtt.SetRange("File Name", MasterAtt."File Name");
+            if TargetAtt.FindFirst() then begin
+                TargetAtt."File Extension" := MasterAtt."File Extension";
+                TargetAtt."Document Reference ID" := MasterAtt."Document Reference ID";
+                CopyUrlFields(MasterAtt, TargetAtt);
+                TargetAtt.Modify();
+            end else begin
+                TargetAtt.Init();
+                TargetAtt."Table ID" := Database::Item;
+                TargetAtt."No." := ItemNo;
+                TargetAtt."File Name" := MasterAtt."File Name";
+                TargetAtt."File Extension" := MasterAtt."File Extension";
+                TargetAtt."Document Reference ID" := MasterAtt."Document Reference ID";
+                CopyUrlFields(MasterAtt, TargetAtt);
+                TargetAtt.Insert(true);
+            end;
+        until MasterAtt.Next() = 0;
+    end;
+
+    local procedure CopyUrlFields(FromAtt: Record "Document Attachment"; var ToAtt: Record "Document Attachment")
+    var
+        FromRef: RecordRef;
+        ToRef: RecordRef;
+        FromFld: FieldRef;
+        ToFld: FieldRef;
+        i: Integer;
+        Name: Text;
+    begin
+        FromRef.GetTable(FromAtt);
+        ToRef.GetTable(ToAtt);
+        for i := 1 to FromRef.FieldCount do begin
+            FromFld := FromRef.FieldIndex(i);
+            if FromFld.Class = FieldClass::Normal then begin
+                Name := UpperCase(FromFld.Name);
+                if (StrPos(Name, 'URL') > 0) or (StrPos(Name, 'URI') > 0) or (StrPos(Name, 'SHAREPOINT') > 0) then
+                    if ToRef.FieldExist(FromFld.Number) then begin
+                        ToFld := ToRef.Field(FromFld.Number);
+                        if ToFld.Class = FieldClass::Normal then
+                            ToFld.Value := FromFld.Value;
+                    end;
+            end;
+        end;
+        ToRef.SetTable(ToAtt);
+    end;
+
+    local procedure CopyItemAttributeSetup(TargetCompany: Text[50])
+    var
+        MasterAttr: Record "Item Attribute";
+    begin
+        if MasterAttr.FindSet() then
+            repeat
+                GetOrCreateItemAttributeId(MasterAttr, TargetCompany);
+            until MasterAttr.Next() = 0;
+    end;
+
+    local procedure GetOrCreateItemAttributeId(MasterAttr: Record "Item Attribute"; TargetCompany: Text[50]): Integer
+    var
+        TargetAttr: Record "Item Attribute";
+    begin
+        TargetAttr.ChangeCompany(TargetCompany);
+        TargetAttr.SetRange(Name, MasterAttr.Name);
+        if TargetAttr.FindFirst() then
+            exit(TargetAttr.ID);
+        TargetAttr.Init();
+        TargetAttr.Name := MasterAttr.Name;
+        TargetAttr.Type := MasterAttr.Type;
+        TargetAttr."Unit of Measure" := MasterAttr."Unit of Measure";
+        TargetAttr.Insert(true);
+        exit(TargetAttr.ID);
+    end;
+
+    local procedure GetOrCreateItemAttributeValueId(MasterVal: Record "Item Attribute Value"; TargetAttrId: Integer; TargetCompany: Text[50]): Integer
+    var
+        TargetVal: Record "Item Attribute Value";
+    begin
+        TargetVal.ChangeCompany(TargetCompany);
+        TargetVal.SetRange("Attribute ID", TargetAttrId);
+        TargetVal.SetRange(Value, MasterVal.Value);
+        if TargetVal.FindFirst() then
+            exit(TargetVal.ID);
+        TargetVal.Init();
+        TargetVal."Attribute ID" := TargetAttrId;
+        TargetVal.Value := MasterVal.Value;
+        TargetVal.Insert(true);
+        exit(TargetVal.ID);
+    end;
+
+    local procedure CopyStandardItemAttributes(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterMap: Record "Item Attribute Value Mapping";
+        TargetMap: Record "Item Attribute Value Mapping";
+        MasterAttr: Record "Item Attribute";
+        MasterVal: Record "Item Attribute Value";
+        TargetAttrId: Integer;
+        TargetValId: Integer;
+    begin
+        MasterMap.SetRange("Table ID", Database::Item);
+        MasterMap.SetRange("No.", ItemNo);
+        if not MasterMap.FindSet() then
+            exit;
+        repeat
+            if MasterAttr.Get(MasterMap."Item Attribute ID") then begin
+                TargetAttrId := GetOrCreateItemAttributeId(MasterAttr, TargetCompany);
+                if MasterVal.Get(MasterMap."Item Attribute ID", MasterMap."Item Attribute Value ID") then
+                    TargetValId := GetOrCreateItemAttributeValueId(MasterVal, TargetAttrId, TargetCompany)
+                else
+                    TargetValId := 0;
+                TargetMap.ChangeCompany(TargetCompany);
+                if TargetMap.Get(Database::Item, ItemNo, TargetAttrId) then begin
+                    TargetMap."Item Attribute Value ID" := TargetValId;
+                    TargetMap.Modify();
+                end else begin
+                    TargetMap.Init();
+                    TargetMap."Table ID" := Database::Item;
+                    TargetMap."No." := ItemNo;
+                    TargetMap."Item Attribute ID" := TargetAttrId;
+                    TargetMap."Item Attribute Value ID" := TargetValId;
+                    TargetMap.Insert();
+                end;
+            end;
+        until MasterMap.Next() = 0;
     end;
 
     local procedure SetAssignmentError(var Assignment: Record "PIM Item Marketplace"; ErrorText: Text)

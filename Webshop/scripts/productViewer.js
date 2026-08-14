@@ -208,11 +208,30 @@ function renderPdp(h, data) {
     pdp.className = 'pdp';
     var photo = document.createElement('div');
     photo.className = 'pdp-photo';
-    if (h.picture) {
+    var pics = (data && data.pictures) || [];
+    var mainUrl = h.picture || (pics[0] && pics[0].url) || '';
+    if (mainUrl) {
         var img = document.createElement('img');
         img.alt = h.description || h.no;
-        img.src = h.picture;
+        img.src = mainUrl;
+        img.id = 'pdp-main-img';
         photo.appendChild(img);
+        if (pics.length > 1) {
+            var thumbs = document.createElement('div');
+            thumbs.className = 'pdp-thumbs';
+            pics.forEach(function (p) {
+                if (!p.url) return;
+                var t = document.createElement('img');
+                t.src = p.url;
+                t.alt = p.source || '';
+                t.onclick = function () {
+                    var main = document.getElementById('pdp-main-img');
+                    if (main) main.src = p.url;
+                };
+                thumbs.appendChild(t);
+            });
+            photo.appendChild(thumbs);
+        }
     } else {
         photo.innerHTML = '<div class="pdp-photo-fallback">No product image</div>';
     }
@@ -284,8 +303,8 @@ function renderTabs() {
     var tabs = document.createElement('div');
     tabs.className = 'tabs';
     tabs.appendChild(tabBtn('Description', 'overview'));
-    tabs.appendChild(tabBtn('PIM attributes', 'specs'));
-    tabs.appendChild(tabBtn('Shopify mapping', 'all'));
+    tabs.appendChild(tabBtn('Attributes & variants', 'specs'));
+    tabs.appendChild(tabBtn('Documents & Shopify', 'all'));
     return tabs;
 }
 
@@ -342,6 +361,27 @@ function renderOverview(data) {
     html += '</div>';
     details.insertAdjacentHTML('beforeend', html);
     wrap.appendChild(details);
+
+    var variants = data.variants || [];
+    if (variants.length) {
+        var v = document.createElement('section');
+        v.className = 'panel';
+        v.innerHTML = '<header><h3>Variants</h3></header>' +
+            '<div class="table-wrap"><table class="shop-table"><thead><tr><th>Code</th><th>Description</th><th>Blocked</th></tr></thead><tbody>' +
+            variants.map(function (x) {
+                return '<tr><td>' + escapeHtml(x.code) + '</td><td>' + escapeHtml(x.description) + '</td><td>' + escapeHtml(x.blocked) + '</td></tr>';
+            }).join('') + '</tbody></table></div>';
+        wrap.appendChild(v);
+    }
+
+    var texts = data.extendedTexts || [];
+    texts.forEach(function (t) {
+        if (!t.text) return;
+        var s = document.createElement('section');
+        s.className = 'panel';
+        s.innerHTML = '<header><h3>' + escapeHtml(t.description || ('Extended text ' + (t.textNo || ''))) + '</h3></header><p class="pdp-desc">' + escapeHtml(t.text) + '</p>';
+        wrap.appendChild(s);
+    });
     return wrap;
 }
 
@@ -350,36 +390,80 @@ function attrRow(name, value) {
 }
 
 function renderSpecs(data) {
+    var wrap = document.createElement('div');
     var panel = document.createElement('section');
     panel.className = 'panel';
     panel.innerHTML = '<header><h3>PIM attributes</h3></header>';
     var attrs = data.attributes || [];
-    var wrap = document.createElement('div');
-    wrap.className = 'table-wrap';
+    var table = document.createElement('div');
+    table.className = 'table-wrap';
     var rows = attrs.map(function (a) {
         return '<tr><td>' + escapeHtml(a.group || '') + '</td><td>' + escapeHtml(a.caption || a.code) + '</td><td>' + escapeHtml(a.value) + '</td></tr>';
     }).join('');
-    wrap.innerHTML = '<table class="shop-table"><thead><tr><th>Group</th><th>Attribute</th><th>Value</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="3">No PIM attribute values. Open PIM Product Enrichment and fill the family attributes.</td></tr>') +
+    table.innerHTML = '<table class="shop-table"><thead><tr><th>Group</th><th>Attribute</th><th>Value</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="3">No PIM attribute values.</td></tr>') +
         '</tbody></table>';
-    panel.appendChild(wrap);
-    return panel;
+    panel.appendChild(table);
+    wrap.appendChild(panel);
+
+    var bcAttrs = data.itemAttributes || [];
+    if (bcAttrs.length) {
+        var p2 = document.createElement('section');
+        p2.className = 'panel';
+        p2.innerHTML = '<header><h3>Master item attributes</h3></header><div class="table-wrap"><table class="shop-table"><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody>' +
+            bcAttrs.map(function (a) {
+                return '<tr><td>' + escapeHtml(a.name) + '</td><td>' + escapeHtml(a.value) + '</td></tr>';
+            }).join('') + '</tbody></table></div>';
+        wrap.appendChild(p2);
+    }
+
+    var uoms = data.unitsOfMeasure || [];
+    if (uoms.length) {
+        var p3 = document.createElement('section');
+        p3.className = 'panel';
+        p3.innerHTML = '<header><h3>Units of measure</h3></header><div class="table-wrap"><table class="shop-table"><thead><tr><th>Code</th><th>Qty per</th></tr></thead><tbody>' +
+            uoms.map(function (u) {
+                return '<tr><td>' + escapeHtml(u.code) + '</td><td>' + escapeHtml(u.qtyPerUnit) + '</td></tr>';
+            }).join('') + '</tbody></table></div>';
+        wrap.appendChild(p3);
+    }
+    return wrap;
 }
 
 function renderAllData(root, data) {
+    var docs = data.documents || [];
     var panel = document.createElement('section');
     panel.className = 'panel';
-    panel.innerHTML = '<header><h3>How this looks on Shopify</h3></header>';
-    panel.insertAdjacentHTML('beforeend', '<div class="map-note">Only PIM-enriched fields plus SKU, price, stock, and image are sent to the storefront. ERP fields such as costing and planning stay in Business Central.</div>');
+    panel.innerHTML = '<header><h3>Documents (SharePoint / attachments)</h3></header>';
+    if (!docs.length)
+        panel.insertAdjacentHTML('beforeend', '<div class="note">No document attachments on this item.</div>');
+    else {
+        var list = '<div class="doc-list">';
+        docs.forEach(function (d) {
+            var name = (d.fileName || 'Document') + (d.extension ? '.' + d.extension : '');
+            if (d.url)
+                list += '<a class="doc-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener">' + escapeHtml(name) + '</a>';
+            else
+                list += '<div class="doc-link">' + escapeHtml(name) + '</div>';
+        });
+        list += '</div>';
+        panel.insertAdjacentHTML('beforeend', list);
+    }
+    root.appendChild(panel);
+
+    var map = document.createElement('section');
+    map.className = 'panel';
+    map.innerHTML = '<header><h3>How this looks on Shopify</h3></header>';
+    map.insertAdjacentHTML('beforeend', '<div class="map-note">PIM content plus variants, pictures, UOMs, extended texts, and attachments. Inventory, cost, and orders stay in each company.</div>');
     var rows = shopifyRows(data).map(function (r) {
         return '<tr><td>' + escapeHtml(r[0]) + '</td><td>' + escapeHtml(r[1]) + '</td><td>' + escapeHtml(displayVal(r[2])) + '</td></tr>';
     }).join('');
-    panel.insertAdjacentHTML(
+    map.insertAdjacentHTML(
         'beforeend',
         '<div class="table-wrap"><table class="shop-table"><thead><tr><th>Shopify field</th><th>PIM / BC source</th><th>Value</th></tr></thead><tbody>' +
             rows + '</tbody></table></div>'
     );
-    root.appendChild(panel);
+    root.appendChild(map);
 }
 
 function toggleBtn(label, key) {

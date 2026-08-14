@@ -24,4 +24,8 @@ Copy the `Webshop` folder into **ICS Master** and publish. Publish the same app 
 3. **Sync to companies** action  
 4. **Published to Webshop** — only then it appears in Product Webshop (master)
 
-Webshop still shows **PIM data only** (plus SKU, price, stock, image).
+## What syncs to child companies (same Item No.)
+
+Pictures, variants, item UOMs, master UOM, item categories, PIM + standard attributes, translations, default/custom extended texts, document attachments (including SharePoint URLs), item references, weights, GTIN, tariff, country of origin.
+
+Not synced: inventory, unit cost, sales/purchase orders, warehouse SKUs.
