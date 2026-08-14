@@ -319,6 +319,7 @@ codeunit 50633 "Product Visual Data"
         Header.Add('unitCost', Format(ItemRec."Unit Cost"));
         Header.Add('inventory', Format(ItemRec.Inventory));
         Header.Add('vendorNo', ItemRec."Vendor No.");
+        Header.Add('vendorName', GetVendorName(ItemRec));
         Header.Add('picture', GetPictureDataUrl(ItemRec, 900000));
         Header.Add('fieldCount', FieldCount);
         Header.Add('customFieldCount', CustomFieldCount);
@@ -340,6 +341,18 @@ codeunit 50633 "Product Visual Data"
             if ItemCategory.Description <> '' then
                 exit(ItemCategory.Description);
         exit(ItemRec."Item Category Code");
+    end;
+
+    local procedure GetVendorName(ItemRec: Record Item): Text
+    var
+        Vendor: Record Vendor;
+    begin
+        if ItemRec."Vendor No." = '' then
+            exit('');
+        if Vendor.Get(ItemRec."Vendor No.") then
+            if Vendor.Name <> '' then
+                exit(Vendor.Name);
+        exit(ItemRec."Vendor No.");
     end;
 
     local procedure GetLongDescription(ItemRec: Record Item): Text

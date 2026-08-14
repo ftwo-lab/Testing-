@@ -18,6 +18,7 @@ permissionset 50355 "Product Visual View"
         tabledata "Stockkeeping Unit" = R,
         tabledata "Default Dimension" = R,
         tabledata Location = R,
+        tabledata Vendor = R,
         tabledata "Tenant Media" = R,
         page "Product Visual Card" = X,
         page "Product Webshop" = X,

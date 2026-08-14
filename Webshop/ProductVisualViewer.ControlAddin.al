@@ -7,9 +7,9 @@ controladdin ProductVisualViewer
     HorizontalStretch = true;
     VerticalStretch = true;
     HorizontalShrink = true;
-    VerticalShrink = true;
-    RequestedHeight = 860;
-    MinimumHeight = 560;
+    VerticalShrink = false;
+    RequestedHeight = 1800;
+    MinimumHeight = 800;
     RequestedWidth = 1100;
     MinimumWidth = 480;
 
