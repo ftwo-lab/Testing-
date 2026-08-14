@@ -1,7 +1,0 @@
-{
-  "al.enableCodeAnalysis": false,
-  "al.packageCachePath": "./.alpackages",
-  "al.assemblyProbingPaths": [
-    "./.netpackages"
-  ]
-}

@@ -1,8 +1,8 @@
 controladdin ProductVisualViewer
 {
-    Scripts = 'src/ControlAddIn/scripts/productViewer.js';
-    StartupScript = 'src/ControlAddIn/scripts/startup.js';
-    StyleSheets = 'src/ControlAddIn/styles/productViewer.css';
+    Scripts = 'Webshop/scripts/productViewer.js';
+    StartupScript = 'Webshop/scripts/startup.js';
+    StyleSheets = 'Webshop/styles/productViewer.css';
 
     HorizontalStretch = true;
     VerticalStretch = true;
