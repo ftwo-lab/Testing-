@@ -1,4 +1,4 @@
-page 50100 "Product Visual Card"
+page 50351 "Product Visual Card"
 {
     Caption = 'Visual Product View';
     PageType = Card;
@@ -53,8 +53,6 @@ page 50100 "Product Visual Card"
                 Caption = 'Open Webshop';
                 Image = ShowList;
                 ToolTip = 'Open the product webshop catalog.';
-                Promoted = true;
-                PromotedCategory = Process;
 
                 trigger OnAction()
                 begin
@@ -67,15 +65,17 @@ page 50100 "Product Visual Card"
                 Caption = 'Refresh';
                 Image = Refresh;
                 ToolTip = 'Reload all product fields and related data into the visual view.';
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
 
                 trigger OnAction()
                 begin
                     SendProductData();
                 end;
             }
+        }
+        area(Promoted)
+        {
+            actionref(OpenWebshop_Promoted; OpenWebshop) { }
+            actionref(RefreshView_Promoted; RefreshView) { }
         }
     }
 

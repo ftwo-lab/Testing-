@@ -1,4 +1,4 @@
-permissionset 50100 "Product Visual View"
+permissionset 50355 "Product Visual View"
 {
     Assignable = true;
     Caption = 'Visual Product View';

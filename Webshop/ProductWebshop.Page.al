@@ -1,4 +1,4 @@
-page 50103 "Product Webshop"
+page 50352 "Product Webshop"
 {
     Caption = 'Product Webshop';
     PageType = Card;
@@ -62,15 +62,16 @@ page 50103 "Product Webshop"
                 Caption = 'Refresh shop';
                 Image = Refresh;
                 ToolTip = 'Reload the webshop catalog from current Item data.';
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
 
                 trigger OnAction()
                 begin
                     SendCatalog();
                 end;
             }
+        }
+        area(Promoted)
+        {
+            actionref(RefreshShop_Promoted; RefreshShop) { }
         }
     }
 

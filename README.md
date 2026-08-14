@@ -1,53 +1,34 @@
-# Copy this into YOUR Business Central app
+# Add Product Webshop to ICS Master (ZVG)
 
-Do **not** publish this Testing repository as its own app.
-
-Copy the **`Webshop`** folder into the root of **your existing AL app** (the folder that already has your `app.json`).
-
-Your app should look like this:
+Copy the **`Webshop`** folder into the **ICS Master** app root (the folder that already has this `app.json`). Do not create a second app and do not change your app id.
 
 ```text
-YourApp/
-  app.json          ← yours, do not replace
-  src/              ← your existing objects
-  Webshop/          ← paste this whole folder here
-    ProductVisualViewer.ControlAddin.al
-    ProductVisualData.Codeunit.al
-    ProductVisualCard.Page.al
-    ProductWebshop.Page.al
-    ItemCardVisualExt.PageExt.al
-    ItemListVisualExt.PageExt.al
-    ProductVisualView.PermissionSet.al
-    scripts/
-    styles/
+ICS Master/
+  app.json
+  src/                 ← your existing objects
+  Webshop/             ← paste this folder here
 ```
 
-## Then do this in your app
+Your `idRanges` already include `50350–50399`. These objects use that range:
 
-1. Open **your** `app.json`.
-2. Make sure `idRanges` includes **50100–50103** (or change the IDs in the Webshop `.al` files to IDs that are free in your range).
-3. In VS Code, run **AL: Download symbols** on **your** app.
-4. Press **F5** to publish **your** app (same way you always publish).
-5. In Business Central: Tell Me → **Product Webshop**.
-
-If the control add-in cannot find the JavaScript/CSS, the `Webshop` folder is not next to `app.json`. Paths in `ProductVisualViewer.ControlAddin.al` must match the folder location.
-
-## If 50100 is already used in your app
-
-Change these IDs in the `.al` files to free numbers from your range:
-
-| File | Object |
+| ID | Object |
 | --- | --- |
-| ProductVisualData.Codeunit.al | codeunit 50100 |
-| ProductVisualView.PermissionSet.al | permissionset 50100 |
-| ProductVisualCard.Page.al | page 50100 |
-| ItemCardVisualExt.PageExt.al | pageextension 50101 |
-| ItemListVisualExt.PageExt.al | pageextension 50102 |
-| ProductWebshop.Page.al | page 50103 |
+| 50350 | Codeunit Product Visual Data |
+| 50351 | Page Product Visual Card |
+| 50352 | Page Product Webshop |
+| 50353 | Page extension Item Card |
+| 50354 | Page extension Item List |
+| 50355 | Permission set Visual Product View |
 
-The control add-in has no object ID.
+If any of those IDs are already used in ICS Master, change only that object’s number to another free ID in `50350–50399` or `50600–50700`.
 
-## After publish
+## Publish ICS Master
 
-- Tell Me → **Product Webshop**
-- Or open an **Item Card** → **View in Webshop**
+1. Open the **ICS Master** folder in VS Code.
+2. Run **AL: Download symbols**.
+3. Press **F5** to publish ICS Master (version can stay `1.0.0.3` or bump to `1.0.0.4`).
+4. In Business Central: Tell Me → **Product Webshop**.
+
+Or open an **Item Card** → **View in Webshop**.
+
+If JavaScript does not load, `Webshop` must sit next to `app.json`, because the control add-in paths are `Webshop/scripts/...` and `Webshop/styles/...`.

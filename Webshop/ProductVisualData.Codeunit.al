@@ -1,4 +1,4 @@
-codeunit 50100 "Product Visual Data"
+codeunit 50350 "Product Visual Data"
 {
     procedure BuildProductJson(Item: Record Item): Text
     var

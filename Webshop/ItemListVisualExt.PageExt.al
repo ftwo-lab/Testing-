@@ -1,4 +1,4 @@
-pageextension 50102 "Item List Visual Ext" extends "Item List"
+pageextension 50354 "Item List Visual Ext" extends "Item List"
 {
     actions
     {
@@ -10,9 +10,6 @@ pageextension 50102 "Item List Visual Ext" extends "Item List"
                 Caption = 'View in Webshop';
                 Image = View;
                 ToolTip = 'Open this item as a webshop product page, including every standard and custom field.';
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
 
                 trigger OnAction()
                 begin
@@ -25,14 +22,17 @@ pageextension 50102 "Item List Visual Ext" extends "Item List"
                 Caption = 'Product Webshop';
                 Image = ShowList;
                 ToolTip = 'Browse items in a webshop catalog view.';
-                Promoted = true;
-                PromotedCategory = Process;
 
                 trigger OnAction()
                 begin
                     Page.Run(Page::"Product Webshop");
                 end;
             }
+        }
+        addlast(Category_Process)
+        {
+            actionref(VisualProductView_Promoted; VisualProductView) { }
+            actionref(ProductWebshop_Promoted; ProductWebshop) { }
         }
     }
 }
