@@ -9,10 +9,11 @@ controladdin ProductVisualViewer
     HorizontalStretch = true;
     HorizontalShrink = true;
 
-    Scripts = 'Webshop/scripts/productViewer.js';
-    StartupScript = 'Webshop/scripts/startup.js';
-    RecreateScript = 'Webshop/scripts/startup.js';
-    StyleSheets = 'Webshop/styles/productViewer.css';
+    // Paths are relative to app.json. This matches Webshop living under src/.
+    Scripts = 'src/Webshop/scripts/productViewer.js';
+    StartupScript = 'src/Webshop/scripts/startup.js';
+    RecreateScript = 'src/Webshop/scripts/startup.js';
+    StyleSheets = 'src/Webshop/styles/productViewer.css';
 
     event ControlReady();
     event ProductSelected(ItemNo: Text);

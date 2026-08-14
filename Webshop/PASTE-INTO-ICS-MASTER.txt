@@ -1,11 +1,21 @@
-Paste this whole Webshop folder next to your ICS Master app.json.
+If your project uses src/ (codeunit, page, table, …), paste the Webshop folder here:
 
-ICS Master/
-  app.json
-  src/
-  Webshop/     ← this folder
+  ZVG-Nonpa/
+    app.json
+    src/
+      codeunit/
+      page/
+      Webshop/     ← here (your layout)
 
-Then in VS Code open ICS Master, download symbols, press F5.
+Control add-in paths must then be:
+  src/Webshop/scripts/productViewer.js
+  src/Webshop/scripts/startup.js
+  src/Webshop/styles/productViewer.css
+
+If you instead paste Webshop next to app.json (not inside src), use paths without src/:
+  Webshop/scripts/productViewer.js
+
+Then Download Symbols and F5.
 
 Tell Me after publish:
 - PIM Families → Create default PIM setup
@@ -14,4 +24,4 @@ Tell Me after publish:
 - Product Webshop
 
 IDs used: 50351–50355 and 50600–50642.
-If an ID is already used in ICS Master, change only that object number.
+If an ID is already used, change only that object number.
