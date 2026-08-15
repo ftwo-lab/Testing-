@@ -34,6 +34,7 @@ codeunit 50633 "Product Visual Data"
         Root.Add('pictures', GetPictures(ItemRec));
         Root.Add('translations', GetTranslations(ItemRec."No."));
         Root.Add('shopifyMap', GetShopifyMap(ItemRec));
+        Root.Add('channels', GetChannels(ItemRec."No."));
         Root.WriteTo(JsonText);
         exit(JsonText);
     end;
@@ -52,17 +53,76 @@ codeunit 50633 "Product Visual Data"
         ItemRec.SetRange("PIM Published", true);
         if ItemRec.FindSet() then
             repeat
-                ItemCount += 1;
-                if ItemCount <= 48 then begin
-                    ItemRec.CalcFields(Inventory);
-                    Products.Add(BuildCatalogProduct(ItemRec));
-                end;
+                AddCatalogItem(ItemRec, Products, ItemCount);
             until (ItemRec.Next() = 0) or (ItemCount >= 48);
+
+        if ItemCount < 48 then
+            AddWebshopChannelItems(Products, ItemCount);
 
         Root.Add('productCount', ItemCount);
         Root.Add('products', Products);
         Root.WriteTo(JsonText);
         exit(JsonText);
+    end;
+
+    local procedure AddCatalogItem(var ItemRec: Record Item; var Products: JsonArray; var ItemCount: Integer)
+    begin
+        ItemCount += 1;
+        if ItemCount <= 48 then begin
+            ItemRec.CalcFields(Inventory);
+            Products.Add(BuildCatalogProduct(ItemRec));
+        end;
+    end;
+
+    local procedure AddWebshopChannelItems(var Products: JsonArray; var ItemCount: Integer)
+    var
+        ItemChannel: Record "PIM Item Channel";
+        Channel: Record "PIM Channel";
+        ItemRec: Record Item;
+        Seen: List of [Code[20]];
+    begin
+        ItemChannel.SetRange(Enabled, true);
+        if not ItemChannel.FindSet() then
+            exit;
+        repeat
+            if ItemCount >= 48 then
+                exit;
+            if not Seen.Contains(ItemChannel."Item No.") then begin
+                Seen.Add(ItemChannel."Item No.");
+                if Channel.Get(ItemChannel."Channel Code") then
+                    if Channel.Enabled and Channel."Show in Webshop" then
+                        if ItemRec.Get(ItemChannel."Item No.") then
+                            if not ItemRec."PIM Published" then
+                                AddCatalogItem(ItemRec, Products, ItemCount);
+            end;
+        until ItemChannel.Next() = 0;
+    end;
+
+    local procedure GetChannels(ItemNo: Code[20]): JsonArray
+    var
+        ItemChannel: Record "PIM Item Channel";
+        Channel: Record "PIM Channel";
+        Result: JsonArray;
+        Row: JsonObject;
+    begin
+        ItemChannel.SetRange("Item No.", ItemNo);
+        if ItemChannel.FindSet() then
+            repeat
+                Clear(Row);
+                ItemChannel.CalcFields("Channel Name", "Channel Type", "Show in Webshop");
+                Row.Add('code', ItemChannel."Channel Code");
+                Row.Add('name', ItemChannel."Channel Name");
+                Row.Add('type', ItemChannel."Channel Type");
+                Row.Add('enabled', ItemChannel.Enabled);
+                Row.Add('webshop', ItemChannel."Show in Webshop");
+                if Channel.Get(ItemChannel."Channel Code") then begin
+                    Row.Add('language', Channel."Language Code");
+                    Row.Add('currency', Channel."Currency Code");
+                    Row.Add('marketplace', Channel."Marketplace Code");
+                end;
+                Result.Add(Row);
+            until ItemChannel.Next() = 0;
+        exit(Result);
     end;
 
     local procedure BuildCatalogProduct(ItemRec: Record Item): JsonObject

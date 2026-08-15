@@ -40,7 +40,7 @@ page 50619 "PIM Product Enrichment"
                 field("PIM Published"; Rec."PIM Published")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'If enabled, this product appears in the webshop with PIM data only.';
+                    ToolTip = 'Enables the WEBSHOP channel. Country channels (DE, AT, …) are separate ticks below.';
                 }
                 field(CompletenessPct; CompletenessPct)
                 {
@@ -52,6 +52,11 @@ page 50619 "PIM Product Enrichment"
                 }
             }
             part(Values; "PIM Product Values")
+            {
+                ApplicationArea = All;
+                SubPageLink = "Item No." = field("No.");
+            }
+            part(Channels; "PIM Item Channels")
             {
                 ApplicationArea = All;
                 SubPageLink = "Item No." = field("No.");
@@ -102,6 +107,7 @@ page 50619 "PIM Product Enrichment"
         PIMEnrichment: Codeunit "PIM Enrichment";
     begin
         PIMEnrichment.EnsureFamilyAttributes(Rec."No.", Rec."PIM Family Code");
+        PIMEnrichment.EnsureItemChannels(Rec."No.");
         CompletenessPct := PIMEnrichment.CompletenessPercent(Rec."No.", Rec."PIM Family Code");
     end;
 

@@ -18,8 +18,14 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
                 field("PIM Published"; Rec."PIM Published")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Show this item in the webshop using PIM data only.';
+                    ToolTip = 'Enable the WEBSHOP channel so this item appears in Product Webshop.';
                 }
+            }
+            part(PIMChannels; "PIM Item Channels")
+            {
+                ApplicationArea = All;
+                SubPageLink = "Item No." = field("No.");
+                Caption = 'PIM Channels';
             }
             part(PIMMarketplaces; "PIM Item Marketplaces")
             {
@@ -91,4 +97,11 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
             actionref(ProductWebshop_Promoted; ProductWebshop) { }
         }
     }
+
+    trigger OnAfterGetCurrRecord()
+    var
+        PIMEnrichment: Codeunit "PIM Enrichment";
+    begin
+        PIMEnrichment.EnsureItemChannels(Rec."No.");
+    end;
 }

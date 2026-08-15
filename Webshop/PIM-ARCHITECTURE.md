@@ -205,7 +205,8 @@ erDiagram
 | Category tree | `PIM Category` with parent |
 | Product values | `PIM Product Value` keyed by Item No. + Attribute |
 | Completeness | Required family attributes filled / required × 100 |
-| Channel / locale | Marketplace = **BC company** (not a Shopify sales channel yet) |
+| Channel | `PIM Channel` + `PIM Item Channel` (WEBSHOP, B2B, country; not Item Variant) |
+| Company copy | `PIM Marketplace` mapped to exact BC Company Name (`ChangeCompany`, same Item No.) |
 | Shopify field names | Optional `Shopify Field` on the attribute (title, vendor, body_html, metafields.*) |
 
 ### Item extension (only three fields)

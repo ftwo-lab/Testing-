@@ -2,7 +2,9 @@
 
 **Download Word architecture (direct):** [ICS-Master-PIM-Architecture.docx](https://github.com/ftwo-lab/Testing-/raw/cursor/visual-product-view-6d56/ICS-Master-PIM-Architecture.docx)
 
-Markdown (same content, GitHub diagrams): [Webshop/PIM-ARCHITECTURE.md](Webshop/PIM-ARCHITECTURE.md)
+**Variants, pictures, SharePoint, UOM, channels, 6-company sync:** [Webshop/PRODUCT-DATA-AND-SYNC.md](Webshop/PRODUCT-DATA-AND-SYNC.md)
+
+Markdown architecture: [Webshop/PIM-ARCHITECTURE.md](Webshop/PIM-ARCHITECTURE.md)
 
 Copy the `Webshop` folder into **ICS Master** and publish. If your AL objects live under `src`, put it at `src/Webshop` and use control add-in paths `src/Webshop/scripts/...` and `src/Webshop/styles/...`. Publish the same app in **every child company** you sync to.
 

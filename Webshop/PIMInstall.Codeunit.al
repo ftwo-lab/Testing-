@@ -51,6 +51,15 @@ codeunit 50634 "PIM Install"
         InsertMarketplace('CH', 'Switzerland', 'CH');
         InsertMarketplace('NP', 'Nonpa', '');
         InsertMarketplace('CZ', 'Czech Republic', 'CZ');
+
+        InsertChannel('WEBSHOP', 'Internal webshop', 'Webshop', true, 1, '', 'MASTER');
+        InsertChannel('B2B', 'B2B catalog', 'B2B', false, 2, '', 'MASTER');
+        InsertChannel('DE', 'Germany storefront', 'Country', false, 10, 'DE', 'MASTER');
+        InsertChannel('AT', 'Austria storefront', 'Country', false, 11, 'AT', 'MASTER');
+        InsertChannel('ES', 'Spain storefront', 'Country', false, 12, 'ES', 'MASTER');
+        InsertChannel('CH', 'Switzerland storefront', 'Country', false, 13, 'CH', 'MASTER');
+        InsertChannel('NP', 'Nonpa storefront', 'Country', false, 14, 'NP', 'MASTER');
+        InsertChannel('CZ', 'Czech Republic storefront', 'Country', false, 15, 'CZ', 'MASTER');
     end;
 
     local procedure InsertGroup(CodeValue: Code[20]; DescriptionValue: Text[100]; SortOrder: Integer)
@@ -146,5 +155,23 @@ codeunit 50634 "PIM Install"
         Marketplace.Enabled := false;
         Marketplace."Copy Unit Price" := true;
         Marketplace.Insert();
+    end;
+
+    local procedure InsertChannel(CodeValue: Code[20]; DescriptionValue: Text[100]; ChannelType: Text[30]; ShowInWebshop: Boolean; SortOrder: Integer; MarketplaceCode: Code[20]; CategoryTree: Code[20])
+    var
+        Channel: Record "PIM Channel";
+    begin
+        if Channel.Get(CodeValue) then
+            exit;
+        Channel.Init();
+        Channel.Code := CodeValue;
+        Channel.Description := DescriptionValue;
+        Channel."Channel Type" := ChannelType;
+        Channel.Enabled := true;
+        Channel."Show in Webshop" := ShowInWebshop;
+        Channel."Marketplace Code" := MarketplaceCode;
+        Channel."Category Tree Code" := CategoryTree;
+        Channel."Sort Order" := SortOrder;
+        Channel.Insert();
     end;
 }

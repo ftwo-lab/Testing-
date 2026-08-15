@@ -75,6 +75,7 @@ codeunit 50639 "PIM Company Sync"
             InsertTargetItem(MasterItem, TargetItem, Marketplace);
 
         CopyPimValues(ItemNo, Marketplace."Company Name");
+        CopyItemChannels(ItemNo, Marketplace."Company Name");
         CopyItemMasterData(MasterItem, Marketplace."Company Name");
     end;
 
@@ -101,8 +102,10 @@ codeunit 50639 "PIM Company Sync"
     begin
         TargetItem.Description := MasterItem.Description;
         TargetItem."Description 2" := MasterItem."Description 2";
-        if MasterItem."Base Unit of Measure" <> '' then
+        if MasterItem."Base Unit of Measure" <> '' then begin
+            EnsureUnitOfMeasure(MasterItem."Base Unit of Measure", Marketplace."Company Name");
             TargetItem."Base Unit of Measure" := MasterItem."Base Unit of Measure";
+        end;
         TargetItem."PIM Family Code" := MasterItem."PIM Family Code";
         TargetItem."PIM Category Code" := MasterItem."PIM Category Code";
         TargetItem."PIM Published" := MasterItem."PIM Published";
@@ -115,6 +118,8 @@ codeunit 50639 "PIM Company Sync"
         TargetItem."Net Weight" := MasterItem."Net Weight";
         TargetItem."Gross Weight" := MasterItem."Gross Weight";
         TargetItem."Unit Volume" := MasterItem."Unit Volume";
+        EnsureUnitOfMeasure(MasterItem."Sales Unit of Measure", Marketplace."Company Name");
+        EnsureUnitOfMeasure(MasterItem."Purch. Unit of Measure", Marketplace."Company Name");
         TargetItem."Sales Unit of Measure" := MasterItem."Sales Unit of Measure";
         TargetItem."Purch. Unit of Measure" := MasterItem."Purch. Unit of Measure";
         TargetItem."Item Disc. Group" := MasterItem."Item Disc. Group";
@@ -184,6 +189,26 @@ codeunit 50639 "PIM Company Sync"
             until MasterValue.Next() = 0;
     end;
 
+    local procedure CopyItemChannels(ItemNo: Code[20]; TargetCompany: Text[50])
+    var
+        MasterCh: Record "PIM Item Channel";
+        TargetCh: Record "PIM Item Channel";
+    begin
+        TargetCh.ChangeCompany(TargetCompany);
+        TargetCh.SetRange("Item No.", ItemNo);
+        TargetCh.DeleteAll();
+
+        MasterCh.SetRange("Item No.", ItemNo);
+        if MasterCh.FindSet() then
+            repeat
+                TargetCh.Init();
+                TargetCh."Item No." := MasterCh."Item No.";
+                TargetCh."Channel Code" := MasterCh."Channel Code";
+                TargetCh.Enabled := MasterCh.Enabled;
+                TargetCh.Insert();
+            until MasterCh.Next() = 0;
+    end;
+
     local procedure CopySetupToCompany(TargetCompany: Text[50])
     var
         Group: Record "PIM Attribute Group";
@@ -192,12 +217,14 @@ codeunit 50639 "PIM Company Sync"
         Family: Record "PIM Family";
         FamilyAttr: Record "PIM Family Attribute";
         Category: Record "PIM Category";
+        Channel: Record "PIM Channel";
         TGroup: Record "PIM Attribute Group";
         TAttr: Record "PIM Attribute";
         TOpt: Record "PIM Attribute Option";
         TFamily: Record "PIM Family";
         TFamilyAttr: Record "PIM Family Attribute";
         TCategory: Record "PIM Category";
+        TChannel: Record "PIM Channel";
     begin
         TGroup.ChangeCompany(TargetCompany);
         TAttr.ChangeCompany(TargetCompany);
@@ -205,6 +232,7 @@ codeunit 50639 "PIM Company Sync"
         TFamily.ChangeCompany(TargetCompany);
         TFamilyAttr.ChangeCompany(TargetCompany);
         TCategory.ChangeCompany(TargetCompany);
+        TChannel.ChangeCompany(TargetCompany);
 
         if Group.FindSet() then
             repeat
@@ -273,6 +301,24 @@ codeunit 50639 "PIM Company Sync"
                     TCategory.Insert();
                 end;
             until Category.Next() = 0;
+
+        if Channel.FindSet() then
+            repeat
+                if not TChannel.Get(Channel.Code) then begin
+                    TChannel.Init();
+                    TChannel.Code := Channel.Code;
+                    TChannel.Description := Channel.Description;
+                    TChannel.Enabled := Channel.Enabled;
+                    TChannel."Show in Webshop" := Channel."Show in Webshop";
+                    TChannel."Language Code" := Channel."Language Code";
+                    TChannel."Currency Code" := Channel."Currency Code";
+                    TChannel."Category Tree Code" := Channel."Category Tree Code";
+                    TChannel."Marketplace Code" := Channel."Marketplace Code";
+                    TChannel."Channel Type" := Channel."Channel Type";
+                    TChannel."Sort Order" := Channel."Sort Order";
+                    TChannel.Insert();
+                end;
+            until Channel.Next() = 0;
 
         CopyItemCategories(TargetCompany);
         CopyItemAttributeSetup(TargetCompany);

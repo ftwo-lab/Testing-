@@ -25,6 +25,13 @@ tableextension 50607 "PIM Item Ext" extends Item
         {
             Caption = 'Published to Webshop';
             DataClassification = CustomerContent;
+
+            trigger OnValidate()
+            var
+                PIMEnrichment: Codeunit "PIM Enrichment";
+            begin
+                PIMEnrichment.SyncWebshopPublish("No.", "PIM Published");
+            end;
         }
     }
 }

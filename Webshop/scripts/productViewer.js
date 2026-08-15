@@ -87,7 +87,7 @@ function renderCatalog(data) {
     grid.className = 'product-grid';
     if (!products.length) {
         if (!(data.products || []).length)
-            wrap.appendChild(note('No published PIM products. Open PIM Product Enrichment, fill attributes, then enable Published to Webshop.'));
+            wrap.appendChild(note('No published PIM products. Enable Published to Webshop or the WEBSHOP channel on PIM Product Enrichment.'));
         else
             wrap.appendChild(note('No products match this search.'));
     } else {
@@ -256,6 +256,10 @@ function renderPdp(h, data) {
         chips.appendChild(chip(h.categoryName || h.itemCategory));
     if (h.type)
         chips.appendChild(chip(h.type));
+    (data.channels || []).forEach(function (ch) {
+        if (ch.enabled)
+            chips.appendChild(chip(ch.name || ch.code, ch.webshop ? 'accent' : ''));
+    });
     info.appendChild(chips);
 
     var qty = document.createElement('div');
