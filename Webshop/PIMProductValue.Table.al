@@ -47,11 +47,22 @@ table 50606 "PIM Product Value"
             CalcFormula = lookup("PIM Attribute"."Type" where("Code" = field("Attribute Code")));
             Editable = false;
         }
+        field(7; "Channel Code"; Code[20])
+        {
+            Caption = 'Channel';
+            TableRelation = "PIM Channel";
+            ToolTip = 'Blank = common value for all channels. DE, ES, AMAZON, SHOPIFY = value only for that channel.';
+        }
+        field(8; "Language Code"; Code[10])
+        {
+            Caption = 'Language';
+            TableRelation = Language;
+        }
     }
 
     keys
     {
-        key(PK; "Item No.", "Attribute Code")
+        key(PK; "Item No.", "Attribute Code", "Channel Code", "Language Code")
         {
             Clustered = true;
         }

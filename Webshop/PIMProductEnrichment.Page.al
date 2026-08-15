@@ -37,6 +37,16 @@ page 50619 "PIM Product Enrichment"
                 {
                     ApplicationArea = All;
                 }
+                field("PIM Channel Code"; Rec."PIM Channel Code")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Switch channel to edit different titles: DE, ES, AMAZON, SHOPIFY. Blank channel rows are shared.';
+
+                    trigger OnValidate()
+                    begin
+                        CurrPage.Update(true);
+                    end;
+                }
                 field("PIM Published"; Rec."PIM Published")
                 {
                     ApplicationArea = All;
@@ -78,7 +88,7 @@ page 50619 "PIM Product Enrichment"
                 var
                     PIMEnrichment: Codeunit "PIM Enrichment";
                 begin
-                    PIMEnrichment.EnsureFamilyAttributes(Rec."No.", Rec."PIM Family Code");
+                    PIMEnrichment.EnsureFamilyAttributes(Rec."No.", Rec."PIM Family Code", Rec."PIM Channel Code");
                     CurrPage.Update(false);
                 end;
             }
@@ -106,7 +116,7 @@ page 50619 "PIM Product Enrichment"
     var
         PIMEnrichment: Codeunit "PIM Enrichment";
     begin
-        PIMEnrichment.EnsureFamilyAttributes(Rec."No.", Rec."PIM Family Code");
+        PIMEnrichment.EnsureFamilyAttributes(Rec."No.", Rec."PIM Family Code", Rec."PIM Channel Code");
         PIMEnrichment.EnsureItemChannels(Rec."No.");
         CompletenessPct := PIMEnrichment.CompletenessPercent(Rec."No.", Rec."PIM Family Code");
     end;

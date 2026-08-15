@@ -109,6 +109,8 @@ codeunit 50639 "PIM Company Sync"
         TargetItem."PIM Family Code" := MasterItem."PIM Family Code";
         TargetItem."PIM Category Code" := MasterItem."PIM Category Code";
         TargetItem."PIM Published" := MasterItem."PIM Published";
+        TargetItem."PIM Channel Code" := ChannelCodeForMarketplace(Marketplace);
+        ApplyChannelTexts(MasterItem."No.", TargetItem, TargetItem."PIM Channel Code");
         TargetItem."Item Category Code" := MasterItem."Item Category Code";
         TargetItem."Search Description" := MasterItem."Search Description";
         TargetItem."Common Item No." := MasterItem."Common Item No.";
@@ -133,6 +135,34 @@ codeunit 50639 "PIM Company Sync"
             TargetItem."Inventory Posting Group" := MasterItem."Inventory Posting Group";
             TargetItem."VAT Prod. Posting Group" := MasterItem."VAT Prod. Posting Group";
         end;
+    end;
+
+    local procedure ChannelCodeForMarketplace(Marketplace: Record "PIM Marketplace"): Code[20]
+    var
+        Channel: Record "PIM Channel";
+    begin
+        if Channel.Get(Marketplace.Code) then
+            exit(Marketplace.Code);
+        Channel.Reset();
+        Channel.SetRange("Marketplace Code", Marketplace.Code);
+        Channel.SetRange(Enabled, true);
+        if Channel.FindFirst() then
+            exit(Channel.Code);
+        exit('');
+    end;
+
+    local procedure ApplyChannelTexts(ItemNo: Code[20]; var TargetItem: Record Item; ChannelCode: Code[20])
+    var
+        PIMEnrichment: Codeunit "PIM Enrichment";
+        Title: Text;
+        ShortText: Text;
+    begin
+        Title := PIMEnrichment.GetValue(ItemNo, 'title', ChannelCode);
+        if Title <> '' then
+            TargetItem.Description := CopyStr(Title, 1, MaxStrLen(TargetItem.Description));
+        ShortText := PIMEnrichment.GetValue(ItemNo, 'short_desc', ChannelCode);
+        if ShortText <> '' then
+            TargetItem."Description 2" := CopyStr(ShortText, 1, MaxStrLen(TargetItem."Description 2"));
     end;
 
     local procedure ApplyTemplateIfNew(var TargetItem: Record Item; Marketplace: Record "PIM Marketplace")
@@ -184,6 +214,8 @@ codeunit 50639 "PIM Company Sync"
                 TargetValue.Init();
                 TargetValue."Item No." := MasterValue."Item No.";
                 TargetValue."Attribute Code" := MasterValue."Attribute Code";
+                TargetValue."Channel Code" := MasterValue."Channel Code";
+                TargetValue."Language Code" := MasterValue."Language Code";
                 TargetValue.Value := MasterValue.Value;
                 TargetValue.Insert();
             until MasterValue.Next() = 0;
@@ -254,7 +286,13 @@ codeunit 50639 "PIM Company Sync"
                     TAttr.Type := Attr.Type;
                     TAttr."Group Code" := Attr."Group Code";
                     TAttr."Shopify Field" := Attr."Shopify Field";
+                    TAttr.Scopable := Attr.Scopable;
+                    TAttr.Localizable := Attr.Localizable;
                     TAttr.Insert();
+                end else begin
+                    TAttr.Scopable := Attr.Scopable;
+                    TAttr.Localizable := Attr.Localizable;
+                    TAttr.Modify();
                 end;
             until Attr.Next() = 0;
 

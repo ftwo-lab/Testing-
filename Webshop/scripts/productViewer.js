@@ -254,6 +254,8 @@ function renderPdp(h, data) {
     chips.appendChild(chip(inStock ? 'In stock' : 'Sold out', inStock ? '' : 'danger'));
     if (h.categoryName || h.itemCategory)
         chips.appendChild(chip(h.categoryName || h.itemCategory));
+    if (h.channel)
+        chips.appendChild(chip('Channel ' + h.channel, 'accent'));
     if (h.type)
         chips.appendChild(chip(h.type));
     (data.channels || []).forEach(function (ch) {

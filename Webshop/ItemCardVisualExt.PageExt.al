@@ -15,6 +15,10 @@ pageextension 50353 "Item Card Visual Ext" extends "Item Card"
                 {
                     ApplicationArea = All;
                 }
+                field("PIM Channel Code"; Rec."PIM Channel Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("PIM Published"; Rec."PIM Published")
                 {
                     ApplicationArea = All;

@@ -16,6 +16,8 @@ page 50612 "PIM Attribute Card"
                 field("Type"; Rec."Type") { ApplicationArea = All; }
                 field("Group Code"; Rec."Group Code") { ApplicationArea = All; }
                 field("Shopify Field"; Rec."Shopify Field") { ApplicationArea = All; }
+                field(Scopable; Rec.Scopable) { ApplicationArea = All; }
+                field(Localizable; Rec.Localizable) { ApplicationArea = All; }
             }
             part(Options; "PIM Attribute Options")
             {

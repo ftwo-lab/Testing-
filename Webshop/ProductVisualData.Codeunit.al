@@ -25,7 +25,7 @@ codeunit 50633 "Product Visual Data"
         Root.Add('showBack', ShowBack);
         Root.Add('shopName', GetShopName());
         Root.Add('header', Header);
-        Root.Add('attributes', GetPimAttributes(ItemRec."No."));
+        Root.Add('attributes', GetPimAttributes(ItemRec."No.", ItemRec."PIM Channel Code"));
         Root.Add('itemAttributes', GetStandardItemAttributes(ItemRec."No."));
         Root.Add('variants', GetVariants(ItemRec."No."));
         Root.Add('unitsOfMeasure', GetUnitsOfMeasure(ItemRec."No."));
@@ -187,29 +187,45 @@ codeunit 50633 "Product Visual Data"
         Header.Add('commonItemNo', ItemRec."Common Item No.");
         Header.Add('picture', GetPictureDataUrl(ItemRec, 900000));
         Header.Add('published', ItemRec."PIM Published");
+        Header.Add('channel', ItemRec."PIM Channel Code");
         Header.Add('familyCode', ItemRec."PIM Family Code");
         Header.Add('completeness', PIMEnrichment.CompletenessPercent(ItemRec."No.", ItemRec."PIM Family Code"));
         exit(Header);
     end;
 
-    local procedure GetPimAttributes(ItemNo: Code[20]): JsonArray
+    local procedure GetPimAttributes(ItemNo: Code[20]; ChannelCode: Code[20]): JsonArray
     var
         ProductValue: Record "PIM Product Value";
+        Attr: Record "PIM Attribute";
+        PIMEnrichment: Codeunit "PIM Enrichment";
         Result: JsonArray;
         Row: JsonObject;
+        Seen: List of [Code[20]];
+        ValueText: Text;
     begin
         ProductValue.SetRange("Item No.", ItemNo);
         if ProductValue.FindSet() then
             repeat
-                ProductValue.CalcFields("Attribute Caption", "Group Code", "Attribute Type");
-                if DelChr(ProductValue.Value, '<>', ' ') <> '' then begin
-                    Clear(Row);
-                    Row.Add('code', ProductValue."Attribute Code");
-                    Row.Add('caption', ProductValue."Attribute Caption");
-                    Row.Add('group', ProductValue."Group Code");
-                    Row.Add('type', Format(ProductValue."Attribute Type"));
-                    Row.Add('value', ProductValue.Value);
-                    Result.Add(Row);
+                if not Seen.Contains(ProductValue."Attribute Code") then begin
+                    Seen.Add(ProductValue."Attribute Code");
+                    ValueText := PIMEnrichment.GetValue(ItemNo, ProductValue."Attribute Code", ChannelCode);
+                    if DelChr(ValueText, '<>', ' ') <> '' then begin
+                        Clear(Row);
+                        if Attr.Get(ProductValue."Attribute Code") then begin
+                            Row.Add('code', Attr.Code);
+                            Row.Add('caption', Attr.Caption);
+                            Row.Add('group', Attr."Group Code");
+                            Row.Add('type', Format(Attr.Type));
+                        end else begin
+                            Row.Add('code', ProductValue."Attribute Code");
+                            Row.Add('caption', ProductValue."Attribute Code");
+                            Row.Add('group', '');
+                            Row.Add('type', '');
+                        end;
+                        Row.Add('value', ValueText);
+                        Row.Add('channel', ChannelCode);
+                        Result.Add(Row);
+                    end;
                 end;
             until ProductValue.Next() = 0;
         exit(Result);

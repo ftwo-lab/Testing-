@@ -30,6 +30,16 @@ table 50601 "PIM Attribute"
             Caption = 'Shopify Field';
             ToolTip = 'Optional Shopify field name, for example title, vendor, body_html, or a metafield key.';
         }
+        field(6; Scopable; Boolean)
+        {
+            Caption = 'Different per channel';
+            ToolTip = 'If enabled, Germany, Spain, Amazon, and Shopify can each have their own value.';
+        }
+        field(7; Localizable; Boolean)
+        {
+            Caption = 'Different per language';
+            ToolTip = 'If enabled, values can differ by language code.';
+        }
     }
 
     keys

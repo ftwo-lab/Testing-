@@ -14,15 +14,15 @@ codeunit 50634 "PIM Install"
         InsertGroup('SPECS', 'Characteristics', 3);
         InsertGroup('SEO', 'SEO', 4);
 
-        InsertAttribute('title', 'Title', "PIM Attribute Type"::Text, 'MARKETING', 'title');
-        InsertAttribute('brand', 'Brand / Vendor', "PIM Attribute Type"::Text, 'MARKETING', 'vendor');
-        InsertAttribute('short_desc', 'Short description', "PIM Attribute Type"::Text, 'MARKETING', '');
-        InsertAttribute('description', 'Description', "PIM Attribute Type"::Text, 'MARKETING', 'body_html');
-        InsertAttribute('color', 'Color', "PIM Attribute Type"::Option, 'SPECS', 'metafields.color');
-        InsertAttribute('material', 'Material', "PIM Attribute Type"::Text, 'SPECS', 'metafields.material');
-        InsertAttribute('size', 'Size', "PIM Attribute Type"::Text, 'SPECS', 'metafields.size');
-        InsertAttribute('seo_title', 'SEO title', "PIM Attribute Type"::Text, 'SEO', 'metafields.seo_title');
-        InsertAttribute('seo_desc', 'SEO description', "PIM Attribute Type"::Text, 'SEO', 'metafields.seo_description');
+        InsertAttribute('title', 'Title', "PIM Attribute Type"::Text, 'MARKETING', 'title', true);
+        InsertAttribute('brand', 'Brand / Vendor', "PIM Attribute Type"::Text, 'MARKETING', 'vendor', false);
+        InsertAttribute('short_desc', 'Short description', "PIM Attribute Type"::Text, 'MARKETING', '', true);
+        InsertAttribute('description', 'Description', "PIM Attribute Type"::Text, 'MARKETING', 'body_html', true);
+        InsertAttribute('color', 'Color', "PIM Attribute Type"::Option, 'SPECS', 'metafields.color', false);
+        InsertAttribute('material', 'Material', "PIM Attribute Type"::Text, 'SPECS', 'metafields.material', false);
+        InsertAttribute('size', 'Size', "PIM Attribute Type"::Text, 'SPECS', 'metafields.size', false);
+        InsertAttribute('seo_title', 'SEO title', "PIM Attribute Type"::Text, 'SEO', 'metafields.seo_title', true);
+        InsertAttribute('seo_desc', 'SEO description', "PIM Attribute Type"::Text, 'SEO', 'metafields.seo_description', true);
 
         InsertOption('color', 'BLACK', 'Black', 1);
         InsertOption('color', 'WHITE', 'White', 2);
@@ -60,6 +60,8 @@ codeunit 50634 "PIM Install"
         InsertChannel('CH', 'Switzerland storefront', 'Country', false, 13, 'CH', 'MASTER');
         InsertChannel('NP', 'Nonpa storefront', 'Country', false, 14, 'NP', 'MASTER');
         InsertChannel('CZ', 'Czech Republic storefront', 'Country', false, 15, 'CZ', 'MASTER');
+        InsertChannel('AMAZON', 'Amazon', 'Amazon', false, 20, '', 'MASTER');
+        InsertChannel('SHOPIFY', 'Shopify', 'Shopify', false, 21, '', 'MASTER');
     end;
 
     local procedure InsertGroup(CodeValue: Code[20]; DescriptionValue: Text[100]; SortOrder: Integer)
@@ -75,18 +77,24 @@ codeunit 50634 "PIM Install"
         Group.Insert();
     end;
 
-    local procedure InsertAttribute(CodeValue: Code[20]; CaptionValue: Text[100]; TypeValue: Enum "PIM Attribute Type"; GroupCode: Code[20]; ShopifyField: Text[50])
+    local procedure InsertAttribute(CodeValue: Code[20]; CaptionValue: Text[100]; TypeValue: Enum "PIM Attribute Type"; GroupCode: Code[20]; ShopifyField: Text[50]; Scopable: Boolean)
     var
         Attr: Record "PIM Attribute";
     begin
-        if Attr.Get(CodeValue) then
+        if Attr.Get(CodeValue) then begin
+            Attr.Scopable := Scopable;
+            if Attr."Shopify Field" = '' then
+                Attr."Shopify Field" := ShopifyField;
+            Attr.Modify();
             exit;
+        end;
         Attr.Init();
         Attr.Code := CodeValue;
         Attr.Caption := CaptionValue;
         Attr.Type := TypeValue;
         Attr."Group Code" := GroupCode;
         Attr."Shopify Field" := ShopifyField;
+        Attr.Scopable := Scopable;
         Attr.Insert();
     end;
 

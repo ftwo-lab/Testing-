@@ -29,13 +29,28 @@ Item 1000  ───────────────────────
 | **PIM attributes** | Title, brand, SEO, color options, … | **PIM Product Enrichment** | Copied as `PIM Product Value`. |
 
 **Channel ≠ Variant.** Channel = *where the product is sold/shown*. Variant = *which SKU option* (BLACK / 500ML).  
-**Channel ≠ Marketplace.** Channel = *PIM publication*. Marketplace = *which BC company receives the ERP item*.
+**Channel ≠ Marketplace.** Channel = *PIM publication + different commercial text*. Marketplace = *which BC company receives the ERP item*.
 
-Typical use:
+### Example: item 756, Germany vs Spain, Amazon vs Shopify
 
-1. Enable **WEBSHOP** (or **Published to Webshop**) → product appears in Product Webshop in **this** company.  
-2. Enable channel **DE** → product is flagged for the Germany storefront.  
-3. Tick marketplace **DE** and **Sync to companies** → Item 1000 is created/updated **in the Germany company**.
+Title, description, short description, and SEO are **scopable** (different per channel). Color/size stay common.
+
+1. Open item **756** → **PIM Enrichment**.
+2. Set **Edit / preview channel** = **DE**. Fill German title and description. Enable channel **DE**.
+3. Switch channel to **ES**. Fill Spanish title and description. Enable channel **ES**.
+4. Switch channel to **AMAZON**. Fill Amazon title (often shorter). Enable channel **AMAZON**.
+5. Switch channel to **SHOPIFY**. Fill Shopify title/body. Enable channel **SHOPIFY**.
+6. **Sync to companies**: tick Germany and Spain (marketplaces DE and ES), then Sync.
+
+| Target | What it gets |
+|--------|----------------|
+| Germany BC company | Same Item No. 756. Item Description = **DE** title. All channel rows are copied (DE, ES, Amazon, Shopify). Preview channel on the item is set to **DE**. |
+| Spain BC company | Same Item No. 756. Item Description = **ES** title. Same full PIM rows. Preview channel = **ES**. |
+| Amazon / Shopify | **Not BC companies.** Values stay in PIM on the item. A later Amazon/Shopify API would read channel AMAZON vs SHOPIFY. This package does not push to Amazon or Shopify yet. Preview: set Edit channel to AMAZON or SHOPIFY and open Product Webshop. |
+
+Blank **Channel** on a value row = shared (used if DE/ES/Amazon has no override).
+
+If you only tick Germany, Spain is not updated. Enabling a channel without ticking the marketplace does **not** create the item in that country.
 
 ---
 
@@ -84,7 +99,7 @@ Webshop JSON: `unitsOfMeasure[]` plus header `baseUom`.
 |--------|-------------|
 | Family / attributes / options / categories | Setup once (**Create default PIM setup**) |
 | PIM Product Value | Enrich title, description, color, … |
-| **PIM Channel** | WEBSHOP, B2B, DE, AT, ES, CH, NP, CZ |
+| **PIM Channel** | WEBSHOP, B2B, DE–CZ, **AMAZON**, **SHOPIFY** |
 | **PIM Item Channel** | Enable this item on those channels |
 | PIM Published | Shortcut for WEBSHOP (kept in sync) |
 | PIM Marketplace | Map DE/AT/… to **exact** BC company name |

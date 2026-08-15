@@ -12,6 +12,8 @@ page 50618 "PIM Product Values"
         {
             repeater(Group)
             {
+                field("Channel Code"; Rec."Channel Code") { ApplicationArea = All; }
+                field("Language Code"; Rec."Language Code") { ApplicationArea = All; }
                 field("Attribute Code"; Rec."Attribute Code") { ApplicationArea = All; }
                 field("Attribute Caption"; Rec."Attribute Caption") { ApplicationArea = All; }
                 field("Group Code"; Rec."Group Code") { ApplicationArea = All; }

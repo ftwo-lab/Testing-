@@ -2,8 +2,18 @@ codeunit 50632 "PIM Enrichment"
 {
     procedure EnsureFamilyAttributes(ItemNo: Code[20]; FamilyCode: Code[20])
     var
+        Item: Record Item;
+        ChannelCode: Code[20];
+    begin
+        if Item.Get(ItemNo) then
+            ChannelCode := Item."PIM Channel Code";
+        EnsureFamilyAttributes(ItemNo, FamilyCode, ChannelCode);
+    end;
+
+    procedure EnsureFamilyAttributes(ItemNo: Code[20]; FamilyCode: Code[20]; ChannelCode: Code[20])
+    var
         FamilyAttribute: Record "PIM Family Attribute";
-        ProductValue: Record "PIM Product Value";
+        Attr: Record "PIM Attribute";
     begin
         if (ItemNo = '') or (FamilyCode = '') then
             exit;
@@ -11,19 +21,40 @@ codeunit 50632 "PIM Enrichment"
         FamilyAttribute.SetRange("Family Code", FamilyCode);
         if FamilyAttribute.FindSet() then
             repeat
-                if not ProductValue.Get(ItemNo, FamilyAttribute."Attribute Code") then begin
-                    ProductValue.Init();
-                    ProductValue."Item No." := ItemNo;
-                    ProductValue."Attribute Code" := FamilyAttribute."Attribute Code";
-                    ProductValue.Insert();
-                end;
+                EnsureValueRow(ItemNo, FamilyAttribute."Attribute Code", '');
+                if Attr.Get(FamilyAttribute."Attribute Code") then
+                    if Attr.Scopable and (ChannelCode <> '') then
+                        EnsureValueRow(ItemNo, FamilyAttribute."Attribute Code", ChannelCode);
             until FamilyAttribute.Next() = 0;
+    end;
+
+    local procedure EnsureValueRow(ItemNo: Code[20]; AttributeCode: Code[20]; ChannelCode: Code[20])
+    var
+        ProductValue: Record "PIM Product Value";
+    begin
+        if ProductValue.Get(ItemNo, AttributeCode, ChannelCode, '') then
+            exit;
+        ProductValue.Init();
+        ProductValue."Item No." := ItemNo;
+        ProductValue."Attribute Code" := AttributeCode;
+        ProductValue."Channel Code" := ChannelCode;
+        ProductValue."Language Code" := '';
+        ProductValue.Insert();
     end;
 
     procedure CompletenessPercent(ItemNo: Code[20]; FamilyCode: Code[20]): Decimal
     var
+        Item: Record Item;
+        ChannelCode: Code[20];
+    begin
+        if Item.Get(ItemNo) then
+            ChannelCode := Item."PIM Channel Code";
+        exit(CompletenessPercent(ItemNo, FamilyCode, ChannelCode));
+    end;
+
+    procedure CompletenessPercent(ItemNo: Code[20]; FamilyCode: Code[20]; ChannelCode: Code[20]): Decimal
+    var
         FamilyAttribute: Record "PIM Family Attribute";
-        ProductValue: Record "PIM Product Value";
         RequiredCount: Integer;
         FilledCount: Integer;
     begin
@@ -35,9 +66,8 @@ codeunit 50632 "PIM Enrichment"
         if FamilyAttribute.FindSet() then
             repeat
                 RequiredCount += 1;
-                if ProductValue.Get(ItemNo, FamilyAttribute."Attribute Code") then
-                    if DelChr(ProductValue.Value, '<>', ' ') <> '' then
-                        FilledCount += 1;
+                if DelChr(GetValue(ItemNo, FamilyAttribute."Attribute Code", ChannelCode), '<>', ' ') <> '' then
+                    FilledCount += 1;
             until FamilyAttribute.Next() = 0;
 
         if RequiredCount = 0 then
@@ -47,9 +77,23 @@ codeunit 50632 "PIM Enrichment"
 
     procedure GetValue(ItemNo: Code[20]; AttributeCode: Code[20]): Text
     var
+        Item: Record Item;
+        ChannelCode: Code[20];
+    begin
+        if Item.Get(ItemNo) then
+            ChannelCode := Item."PIM Channel Code";
+        exit(GetValue(ItemNo, AttributeCode, ChannelCode));
+    end;
+
+    procedure GetValue(ItemNo: Code[20]; AttributeCode: Code[20]; ChannelCode: Code[20]): Text
+    var
         ProductValue: Record "PIM Product Value";
     begin
-        if ProductValue.Get(ItemNo, AttributeCode) then
+        if ChannelCode <> '' then
+            if ProductValue.Get(ItemNo, AttributeCode, ChannelCode, '') then
+                if DelChr(ProductValue.Value, '<>', ' ') <> '' then
+                    exit(ProductValue.Value);
+        if ProductValue.Get(ItemNo, AttributeCode, '', '') then
             exit(ProductValue.Value);
         exit('');
     end;
