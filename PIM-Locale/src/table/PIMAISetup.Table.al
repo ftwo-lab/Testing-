@@ -12,7 +12,7 @@ table 50102 "PIM AI Setup"
         field(2; "AI Provider"; Enum "PIM AI Provider")
         {
             Caption = 'AI Provider';
-            InitValue = Claude;
+            InitValue = "Azure Translator";
         }
         field(3; "Endpoint URL"; Text[250])
         {
@@ -22,7 +22,12 @@ table 50102 "PIM AI Setup"
         field(4; "Deployment Name"; Text[100])
         {
             Caption = 'Model / Deployment Name';
-            ToolTip = 'Azure: deployment name, e.g. gpt-4o-mini. Claude: model name, e.g. claude-sonnet-4-20250514.';
+            ToolTip = 'Azure OpenAI: deployment name, e.g. gpt-4o-mini. Claude: model name, e.g. claude-sonnet-4-20250514. Not used for Azure Translator.';
+        }
+        field(8; "API Region"; Code[20])
+        {
+            Caption = 'API Region';
+            ToolTip = 'Azure Translator only. Region of your Translator resource, e.g. eastasia, westeurope.';
         }
         field(5; "API Key"; Text[250])
         {

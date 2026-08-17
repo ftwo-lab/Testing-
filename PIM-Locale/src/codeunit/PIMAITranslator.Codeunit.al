@@ -74,6 +74,8 @@ codeunit 50102 "PIM AI Translator"
                 exit(TranslateWithClaude(SourceText, SourceLocaleTag, TargetLocaleTag, PIMAISetup));
             PIMAISetup."AI Provider"::"Azure OpenAI":
                 exit(TranslateWithAzureOpenAI(SourceText, SourceLocaleTag, TargetLocaleTag, PIMAISetup));
+            PIMAISetup."AI Provider"::"Azure Translator":
+                exit(TranslateWithAzureTranslator(SourceText, SourceLocaleTag, TargetLocaleTag, PIMAISetup));
         end;
     end;
 

@@ -11,4 +11,8 @@ enum 50101 "PIM AI Provider"
     {
         Caption = 'Claude (Anthropic)';
     }
+    value(2; "Azure Translator")
+    {
+        Caption = 'Azure Translator';
+    }
 }
