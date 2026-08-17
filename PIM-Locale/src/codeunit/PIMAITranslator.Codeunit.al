@@ -7,14 +7,6 @@ codeunit 50102 "PIM AI Translator"
         SourceLocale: Record "PIM Locale";
         PIMItemLocaleData: Record "PIM Item Locale Data";
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
-        SourceDescription: Text[100];
-        SourceDescription2: Text[50];
-        SourceExtendedDescription: Text[2048];
-        SourceMarketingText: Text[2048];
-        TranslatedDescription: Text[100];
-        TranslatedDescription2: Text[50];
-        TranslatedExtendedDescription: Text[2048];
-        TranslatedMarketingText: Text[2048];
     begin
         if not Item.Get(ItemNo) then
             Error('Item %1 was not found.', ItemNo);
@@ -36,26 +28,32 @@ codeunit 50102 "PIM AI Translator"
                 then
                     Error('Translation for locale %1 is already reviewed/published. Enable overwrite to replace it.', TargetLocaleCode);
 
-        PIMLocaleMgt.LoadItemTextsForLocale(
-            ItemNo, SourceLocale.Code,
-            SourceDescription, SourceDescription2, SourceExtendedDescription, SourceMarketingText);
-
-        TranslatedDescription := TranslateText(SourceDescription, SourceLocale."AI Locale Tag", PIMLocale."AI Locale Tag");
-        TranslatedDescription2 := TranslateText(SourceDescription2, SourceLocale."AI Locale Tag", PIMLocale."AI Locale Tag");
-        TranslatedExtendedDescription := TranslateText(SourceExtendedDescription, SourceLocale."AI Locale Tag", PIMLocale."AI Locale Tag");
-        TranslatedMarketingText := TranslateText(SourceMarketingText, SourceLocale."AI Locale Tag", PIMLocale."AI Locale Tag");
+        PIMLocaleMgt.TranslateAllItemFields(ItemNo, TargetLocaleCode, SourceLocale, PIMLocale);
 
         PIMLocaleMgt.GetItemLocaleData(ItemNo, TargetLocaleCode, PIMItemLocaleData);
-        PIMItemLocaleData.Description := CopyStr(TranslatedDescription, 1, MaxStrLen(PIMItemLocaleData.Description));
-        PIMItemLocaleData."Description 2" := CopyStr(TranslatedDescription2, 1, MaxStrLen(PIMItemLocaleData."Description 2"));
-        PIMItemLocaleData."Extended Description" := CopyStr(TranslatedExtendedDescription, 1, MaxStrLen(PIMItemLocaleData."Extended Description"));
-        PIMItemLocaleData."Marketing Text" := CopyStr(TranslatedMarketingText, 1, MaxStrLen(PIMItemLocaleData."Marketing Text"));
+        SyncHeaderFromTranslatedFields(Item, PIMItemLocaleData);
         PIMItemLocaleData."Translated by AI" := true;
         PIMItemLocaleData."Last Translated At" := CurrentDateTime();
         PIMItemLocaleData."Translation Status" := PIMItemLocaleData."Translation Status"::"AI Generated";
         PIMLocaleMgt.SaveItemLocaleData(PIMItemLocaleData);
 
         Message('Translation completed for locale %1.', PIMLocale.Name);
+    end;
+
+    local procedure SyncHeaderFromTranslatedFields(Item: Record Item; var PIMItemLocaleData: Record "PIM Item Locale Data")
+    var
+        PIMItemLocaleField: Record "PIM Item Locale Field";
+    begin
+        PIMItemLocaleField.SetRange("Item No.", PIMItemLocaleData."Item No.");
+        PIMItemLocaleField.SetRange("Locale Code", PIMItemLocaleData."Locale Code");
+        PIMItemLocaleField.SetRange("Table No.", Database::Item);
+        PIMItemLocaleField.SetRange("Field No.", Item.FieldNo(Description));
+        if PIMItemLocaleField.FindFirst() then
+            PIMItemLocaleData.Description := CopyStr(PIMItemLocaleField.Value, 1, MaxStrLen(PIMItemLocaleData.Description));
+
+        PIMItemLocaleField.SetRange("Field No.", Item.FieldNo("Description 2"));
+        if PIMItemLocaleField.FindFirst() then
+            PIMItemLocaleData."Description 2" := CopyStr(PIMItemLocaleField.Value, 1, MaxStrLen(PIMItemLocaleData."Description 2"));
     end;
 
     procedure ApplyLocaleAndTranslate(ItemNo: Code[20]; LocaleCode: Code[10])

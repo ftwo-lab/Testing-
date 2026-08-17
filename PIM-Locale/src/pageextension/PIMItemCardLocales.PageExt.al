@@ -2,50 +2,18 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
 {
     layout
     {
-        modify(Description)
-        {
-            Visible = SourceLocaleActive;
-        }
-        modify("Description 2")
-        {
-            Visible = SourceLocaleActive;
-        }
-        addafter(Description)
-        {
-            field(LocaleDescription; LocaleDescription)
-            {
-                ApplicationArea = All;
-                Caption = 'Description';
-                ToolTip = 'Translated description for the selected locale.';
-                Visible = not SourceLocaleActive;
-
-                trigger OnValidate()
-                begin
-                    SaveLocaleField();
-                end;
-            }
-        }
-        addafter("Description 2")
-        {
-            field(LocaleDescription2; LocaleDescription2)
-            {
-                ApplicationArea = All;
-                Caption = 'Description 2';
-                ToolTip = 'Translated description 2 for the selected locale.';
-                Visible = not SourceLocaleActive;
-
-                trigger OnValidate()
-                begin
-                    SaveLocaleField();
-                end;
-            }
-        }
         addfirst(factboxes)
         {
             part(PIMLocaleStatus; "PIM Item Locale Status")
             {
                 ApplicationArea = All;
                 SubPageLink = "Item No." = field("No.");
+            }
+            part(PIMLocaleFields; "PIM Item Locale Fields")
+            {
+                ApplicationArea = All;
+                SubPageLink = "Item No." = field("No.");
+                Visible = not SourceLocaleActive;
             }
         }
     }
@@ -57,7 +25,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
             group(PIMLocales)
             {
                 Caption = 'Locales';
-                ToolTip = 'Select a language. Item text is translated and shown on this page.';
+                ToolTip = 'Select a language. All text fields on this item page are translated and shown here.';
                 Image = Language;
 
                 action(LocaleEnglish)
@@ -65,7 +33,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'English';
                     Image = Language;
-                    ToolTip = 'Show original English item text.';
+                    ToolTip = 'Show original English values on all item fields.';
 
                     trigger OnAction()
                     begin
@@ -77,7 +45,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Germany';
                     Image = Language;
-                    ToolTip = 'Translate and show German text on this item page.';
+                    ToolTip = 'Translate all item text fields to German and show them on this page.';
 
                     trigger OnAction()
                     begin
@@ -89,7 +57,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Swiss German';
                     Image = Language;
-                    ToolTip = 'Translate and show Swiss German text on this item page.';
+                    ToolTip = 'Translate all item text fields to Swiss German and show them on this page.';
 
                     trigger OnAction()
                     begin
@@ -107,29 +75,53 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
     begin
         PIMLocaleMgt.EnsureDefaultLocales();
         PIMLocaleSession.ResetToSourceLocale();
-        LoadLocaleFields();
+        ActiveLocaleCode := PIMLocaleSession.GetActiveLocale();
+        SourceLocaleActive := ActiveLocaleCode = PIMLocaleMgt.GetSourceLocaleCode();
     end;
 
     trigger OnAfterGetCurrRecord()
+    var
+        Item: Record Item;
+        PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
     begin
-        LoadLocaleFields();
+        if SourceLocaleActive then
+            exit;
+
+        Item := Rec;
+        PIMLocaleMgt.ApplyLocaleFieldsToItem(Item, ActiveLocaleCode);
+        Rec := Item;
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    var
+        PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
+    begin
+        if SourceLocaleActive then
+            exit(true);
+
+        PIMLocaleMgt.SaveItemLocaleFieldsFromItem(Rec, ActiveLocaleCode);
+        exit(false);
     end;
 
     var
-        LocaleDescription: Text[100];
-        LocaleDescription2: Text[50];
-        LocaleExtendedDescription: Text[2048];
-        LocaleMarketingText: Text[2048];
+        ActiveLocaleCode: Code[10];
         SourceLocaleActive: Boolean;
 
     local procedure SwitchLocale(LocaleCode: Code[10])
     var
-        PIMLocaleSession: Codeunit "PIM Locale Session";
+        Item: Record Item;
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
+        PIMLocaleSession: Codeunit "PIM Locale Session";
     begin
         PIMLocaleSession.SetActiveLocale(LocaleCode);
-        LoadLocaleFields();
-        CurrPage.Update(false);
+        ActiveLocaleCode := LocaleCode;
+        SourceLocaleActive := ActiveLocaleCode = PIMLocaleMgt.GetSourceLocaleCode();
+
+        if Item.Get(Rec."No.") then begin
+            Rec := Item;
+            CurrPage.Update(false);
+        end;
+
         Message('Showing locale: %1', PIMLocaleMgt.GetLocaleName(LocaleCode));
     end;
 
@@ -137,36 +129,21 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
     var
         PIMAITranslator: Codeunit "PIM AI Translator";
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
+        PIMLocaleSession: Codeunit "PIM Locale Session";
+        Item: Record Item;
     begin
         PIMAITranslator.ApplyLocaleAndTranslate(Rec."No.", LocaleCode);
-        LoadLocaleFields();
-        CurrPage.Update(false);
-        Message('Translated to %1. Text is shown on this item page.', PIMLocaleMgt.GetLocaleName(LocaleCode));
-    end;
 
-    local procedure LoadLocaleFields()
-    var
-        PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
-        PIMLocaleSession: Codeunit "PIM Locale Session";
-        ActiveLocaleCode: Code[10];
-        SourceLocaleCode: Code[10];
-    begin
-        ActiveLocaleCode := PIMLocaleSession.GetActiveLocale();
-        SourceLocaleCode := PIMLocaleMgt.GetSourceLocaleCode();
-        SourceLocaleActive := (ActiveLocaleCode = SourceLocaleCode) or (SourceLocaleCode = '');
+        PIMLocaleSession.SetActiveLocale(LocaleCode);
+        ActiveLocaleCode := LocaleCode;
+        SourceLocaleActive := false;
 
-        PIMLocaleMgt.LoadItemTextsForLocale(
-            Rec."No.", ActiveLocaleCode,
-            LocaleDescription, LocaleDescription2, LocaleExtendedDescription, LocaleMarketingText);
-    end;
+        if Item.Get(Rec."No.") then begin
+            PIMLocaleMgt.ApplyLocaleFieldsToItem(Item, ActiveLocaleCode);
+            Rec := Item;
+            CurrPage.Update(false);
+        end;
 
-    local procedure SaveLocaleField()
-    var
-        PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
-        PIMLocaleSession: Codeunit "PIM Locale Session";
-    begin
-        PIMLocaleMgt.SaveItemTextsForLocale(
-            Rec."No.", PIMLocaleSession.GetActiveLocale(),
-            LocaleDescription, LocaleDescription2, LocaleExtendedDescription, LocaleMarketingText);
+        Message('All text fields translated to %1 and shown on this page.', PIMLocaleMgt.GetLocaleName(LocaleCode));
     end;
 }

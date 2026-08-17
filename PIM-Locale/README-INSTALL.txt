@@ -45,6 +45,9 @@ enum/
   PIMTranslationStatus.Enum.al
   PIMAIProvider.Enum.al
 
+table/
+  PIMItemLocaleField.Table.al   (NEW)
+
 codeunit/
   PIMLocaleSession.Codeunit.al
   PIMLocaleMgt.Codeunit.al
