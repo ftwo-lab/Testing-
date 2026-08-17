@@ -9,6 +9,14 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                 Caption = 'Locale Content';
                 Visible = LocaleFieldsVisible;
 
+                field(ActiveLocaleName; ActiveLocaleName)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Active Locale';
+                    Editable = false;
+                    Style = Strong;
+                    StyleExpr = true;
+                }
                 field(LocaleDescription; LocaleDescription)
                 {
                     ApplicationArea = All;
@@ -55,14 +63,6 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                         SaveLocaleField();
                     end;
                 }
-                field(ActiveLocaleName; ActiveLocaleName)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Active Locale';
-                    Editable = false;
-                    Style = Strong;
-                    StyleExpr = true;
-                }
             }
         }
         addfirst(factboxes)
@@ -77,11 +77,12 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
 
     actions
     {
-        addlast(Processing)
+        addfirst(Processing)
         {
             group(PIMLocales)
             {
                 Caption = 'Locales';
+                ToolTip = 'Switch language and translate item content.';
                 Image = Language;
 
                 action(LocaleEnglish)
@@ -89,11 +90,12 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'English';
                     Image = Language;
-                    ToolTip = 'Switch to English locale content.';
+                    ToolTip = 'Show English source content.';
 
                     trigger OnAction()
                     begin
                         SwitchLocale('EN');
+                        Message('Active locale: English');
                     end;
                 }
                 action(LocaleGermany)
@@ -101,11 +103,11 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Germany';
                     Image = Language;
-                    ToolTip = 'Switch to Germany locale content.';
+                    ToolTip = 'Switch to German and translate all item content.';
 
                     trigger OnAction()
                     begin
-                        SwitchLocale('DE');
+                        SwitchLocaleAndTranslate('DE');
                     end;
                 }
                 action(LocaleSwiss)
@@ -113,36 +115,19 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Swiss German';
                     Image = Language;
-                    ToolTip = 'Switch to Swiss German locale content.';
+                    ToolTip = 'Switch to Swiss German and translate all item content.';
 
                     trigger OnAction()
                     begin
-                        SwitchLocale('CH');
-                    end;
-                }
-                action(TranslateCurrentLocale)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Translate Current Locale with AI';
-                    Image = Translate;
-                    ToolTip = 'Translate item content from the source locale to the active locale using AI.';
-
-                    trigger OnAction()
-                    var
-                        PIMAITranslator: Codeunit "PIM AI Translator";
-                        PIMLocaleSession: Codeunit "PIM Locale Session";
-                    begin
-                        PIMAITranslator.TranslateItemToLocale(Rec."No.", PIMLocaleSession.GetActiveLocale(), false);
-                        LoadLocaleFields();
-                        CurrPage.Update(false);
+                        SwitchLocaleAndTranslate('CH');
                     end;
                 }
                 action(OpenLocaleContent)
                 {
                     ApplicationArea = All;
-                    Caption = 'Open Locale Content';
+                    Caption = 'Edit Locale Content';
                     Image = EditLines;
-                    ToolTip = 'Open the locale content card for the active locale.';
+                    ToolTip = 'Open the locale content card for manual edits.';
 
                     trigger OnAction()
                     var
@@ -190,6 +175,15 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
         PIMLocaleSession: Codeunit "PIM Locale Session";
     begin
         PIMLocaleSession.SetActiveLocale(LocaleCode);
+        LoadLocaleFields();
+        CurrPage.Update(false);
+    end;
+
+    local procedure SwitchLocaleAndTranslate(LocaleCode: Code[10])
+    var
+        PIMAITranslator: Codeunit "PIM AI Translator";
+    begin
+        PIMAITranslator.ApplyLocaleAndTranslate(Rec."No.", LocaleCode);
         LoadLocaleFields();
         CurrPage.Update(false);
     end;
