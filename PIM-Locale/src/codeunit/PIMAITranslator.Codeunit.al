@@ -55,7 +55,20 @@ codeunit 50102 "PIM AI Translator"
         PIMItemLocaleData."Translation Status" := PIMItemLocaleData."Translation Status"::"AI Generated";
         PIMLocaleMgt.SaveItemLocaleData(PIMItemLocaleData);
 
-        Message('AI translation completed for locale %1.', PIMLocale.Name);
+        Message('Translation completed for locale %1.', PIMLocale.Name);
+    end;
+
+    procedure ApplyLocaleAndTranslate(ItemNo: Code[20]; LocaleCode: Code[10])
+    var
+        PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
+        PIMLocaleSession: Codeunit "PIM Locale Session";
+    begin
+        PIMLocaleSession.SetActiveLocale(LocaleCode);
+
+        if LocaleCode = PIMLocaleMgt.GetSourceLocaleCode() then
+            exit;
+
+        TranslateItemToLocale(ItemNo, LocaleCode, true);
     end;
 
     procedure TranslateText(SourceText: Text; SourceLocaleTag: Text[20]; TargetLocaleTag: Text[20]): Text
@@ -65,9 +78,11 @@ codeunit 50102 "PIM AI Translator"
         if SourceText = '' then
             exit('');
 
-        PIMAISetup.Get();
+        if not PIMAISetup.Get() then
+            Error('PIM AI Setup is missing. Open PIM AI Setup and configure it.');
+
         if not PIMAISetup.Enabled then
-            Error('Configure PIM AI Setup before using AI translation.');
+            Error('PIM AI Setup is disabled. Open PIM AI Setup and turn Enabled on.');
 
         case PIMAISetup."AI Provider" of
             PIMAISetup."AI Provider"::Claude:
@@ -76,6 +91,8 @@ codeunit 50102 "PIM AI Translator"
                 exit(TranslateWithAzureOpenAI(SourceText, SourceLocaleTag, TargetLocaleTag, PIMAISetup));
             PIMAISetup."AI Provider"::"Azure Translator":
                 exit(TranslateWithAzureTranslator(SourceText, SourceLocaleTag, TargetLocaleTag, PIMAISetup));
+            else
+                Error('Unsupported AI Provider in PIM AI Setup.');
         end;
     end;
 
@@ -200,7 +217,10 @@ codeunit 50102 "PIM AI Translator"
 
         HttpResponseMessage.Content().ReadAs(ResponseText);
         if not HttpResponseMessage.IsSuccessStatusCode() then
-            Error('Azure OpenAI translation failed: %1', CopyStr(ResponseText, 1, 250));
+            Error(
+              'Azure OpenAI failed (HTTP %1): %2',
+              Format(HttpResponseMessage.HttpStatusCode()),
+              CopyStr(ResponseText, 1, 250));
 
         Clear(JsonObject);
         if not JsonObject.ReadFrom(ResponseText) then
@@ -251,7 +271,7 @@ codeunit 50102 "PIM AI Translator"
 
         Url := StrSubstNo(
             '%1/translate?api-version=3.0&from=%2&to=%3',
-            GetTranslatorEndpoint(PIMAISetup."Endpoint URL"), FromLang, ToLang);
+            GetTranslatorEndpoint(PIMAISetup."Endpoint URL", PIMAISetup."API Region"), FromLang, ToLang);
 
         Clear(RequestObject);
         RequestObject.Add('text', SourceText);
@@ -269,14 +289,18 @@ codeunit 50102 "PIM AI Translator"
         HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Region', PIMAISetup."API Region");
 
         if not HttpClient.Post(Url, HttpContent, HttpResponseMessage) then
-            Error('Could not connect to Azure Translator.');
+            Error('Could not connect to Azure Translator at %1. Check Allow HTTPClient Requests in Extension Management.', Url);
 
         HttpResponseMessage.Content().ReadAs(ResponseText);
         if not HttpResponseMessage.IsSuccessStatusCode() then
-            Error('Azure Translator failed: %1', CopyStr(ResponseText, 1, 250));
+            Error(
+              'Azure Translator failed (HTTP %1). Region=%2. Response=%3',
+              Format(HttpResponseMessage.HttpStatusCode()),
+              PIMAISetup."API Region",
+              CopyStr(ResponseText, 1, 250));
 
         if not ResponseArray.ReadFrom(ResponseText) then
-            Error('Invalid Azure Translator response.');
+            Error('Invalid Azure Translator response: %1', CopyStr(ResponseText, 1, 250));
 
         if ResponseArray.Count() = 0 then
             Error('Azure Translator response was empty.');
@@ -293,7 +317,8 @@ codeunit 50102 "PIM AI Translator"
         TranslationsArray.Get(0, JsonToken);
         TranslationObject := JsonToken.AsObject();
         if not TranslationObject.Get('text', JsonToken) then
-            Error('Azure Translator response did not contain text.');
+            if not TranslationObject.Get('Text', JsonToken) then
+                Error('Azure Translator response did not contain text.');
 
         exit(JsonToken.AsValue().AsText());
     end;
@@ -345,11 +370,18 @@ codeunit 50102 "PIM AI Translator"
         end;
     end;
 
-    local procedure GetTranslatorEndpoint(EndpointURL: Text[250]): Text
+    local procedure GetTranslatorEndpoint(EndpointURL: Text[250]; APIRegion: Code[20]): Text
+    var
+        RegionText: Text;
     begin
-        if EndpointURL = '' then
-            exit('https://api.cognitive.microsofttranslator.com');
-        exit(DelChr(EndpointURL, '>', '/'));
+        RegionText := LowerCase(DelChr(APIRegion, '<>', ' '));
+        if RegionText <> '' then
+            exit('https://' + RegionText + '.api.cognitive.microsofttranslator.com');
+
+        if EndpointURL <> '' then
+            exit(DelChr(EndpointURL, '>', '/'));
+
+        exit('https://api.cognitive.microsofttranslator.com');
     end;
 
     local procedure GetClaudeEndpoint(EndpointURL: Text[250]): Text
