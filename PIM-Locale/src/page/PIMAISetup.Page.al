@@ -56,19 +56,19 @@ page 50101 "PIM AI Setup"
             }
             group(TranslatorHelp)
             {
-                Caption = 'Azure Translator quick setup (MSBCTranslator)';
+                Caption = 'Help for MSBCTranslator';
                 Visible = Rec."AI Provider" = Rec."AI Provider"::"Azure Translator";
 
                 field(TranslatorEndpointHelp; TranslatorEndpointHelp)
                 {
                     ApplicationArea = All;
-                    Caption = 'Endpoint URL';
+                    Caption = 'Example Endpoint URL';
                     Editable = false;
                 }
                 field(TranslatorRegionHelp; TranslatorRegionHelp)
                 {
                     ApplicationArea = All;
-                    Caption = 'API Region';
+                    Caption = 'Example API Region';
                     Editable = false;
                 }
             }
@@ -110,6 +110,20 @@ page 50101 "PIM AI Setup"
         TranslatorRegionHelp := 'eastasia';
         ClaudeEndpointHelp := 'https://api.anthropic.com/v1/messages';
         ClaudeModelHelp := 'claude-sonnet-4-20250514';
+    end;
+
+    local procedure EnsureTranslatorDefaults()
+    begin
+        if Rec."AI Provider" <> Rec."AI Provider"::"Azure Translator" then
+            exit;
+
+        if Rec."Endpoint URL" = '' then
+            Rec."Endpoint URL" := 'https://api.cognitive.microsofttranslator.com';
+
+        if Rec."API Region" = '' then
+            Rec."API Region" := 'eastasia';
+
+        Rec.Modify(true);
     end;
 
     var
