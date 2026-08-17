@@ -225,6 +225,79 @@ codeunit 50102 "PIM AI Translator"
         exit(JsonToken.AsValue().AsText());
     end;
 
+    local procedure TranslateWithAzureTranslator(SourceText: Text; SourceLocaleTag: Text[20]; TargetLocaleTag: Text[20]; PIMAISetup: Record "PIM AI Setup"): Text
+    var
+        HttpClient: HttpClient;
+        HttpContent: HttpContent;
+        HttpHeaders: HttpHeaders;
+        HttpResponseMessage: HttpResponseMessage;
+        RequestBody: Text;
+        ResponseText: Text;
+        RequestArray: JsonArray;
+        RequestObject: JsonObject;
+        ResponseArray: JsonArray;
+        ResponseObject: JsonObject;
+        TranslationsArray: JsonArray;
+        TranslationObject: JsonObject;
+        JsonToken: JsonToken;
+        Url: Text;
+        FromLang: Code[10];
+        ToLang: Code[10];
+    begin
+        ValidateAzureTranslatorSetup(PIMAISetup);
+
+        FromLang := MapToTranslatorLanguage(SourceLocaleTag);
+        ToLang := MapToTranslatorLanguage(TargetLocaleTag);
+
+        Url := StrSubstNo(
+            '%1/translate?api-version=3.0&from=%2&to=%3',
+            GetTranslatorEndpoint(PIMAISetup."Endpoint URL"), FromLang, ToLang);
+
+        Clear(RequestObject);
+        RequestObject.Add('text', SourceText);
+        Clear(RequestArray);
+        RequestArray.Add(RequestObject);
+        RequestArray.WriteTo(RequestBody);
+
+        HttpContent.WriteFrom(RequestBody);
+        HttpContent.GetHeaders(HttpHeaders);
+        HttpHeaders.Clear();
+        HttpHeaders.Add('Content-Type', 'application/json');
+
+        HttpClient.DefaultRequestHeaders().Clear();
+        HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Key', PIMAISetup."API Key");
+        HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Region', PIMAISetup."API Region");
+
+        if not HttpClient.Post(Url, HttpContent, HttpResponseMessage) then
+            Error('Could not connect to Azure Translator.');
+
+        HttpResponseMessage.Content().ReadAs(ResponseText);
+        if not HttpResponseMessage.IsSuccessStatusCode() then
+            Error('Azure Translator failed: %1', CopyStr(ResponseText, 1, 250));
+
+        if not ResponseArray.ReadFrom(ResponseText) then
+            Error('Invalid Azure Translator response.');
+
+        if ResponseArray.Count() = 0 then
+            Error('Azure Translator response was empty.');
+
+        ResponseArray.Get(0, JsonToken);
+        ResponseObject := JsonToken.AsObject();
+        if not ResponseObject.Get('translations', JsonToken) then
+            Error('Azure Translator response did not contain translations.');
+
+        TranslationsArray := JsonToken.AsArray();
+        if TranslationsArray.Count() = 0 then
+            Error('Azure Translator did not return translated text.');
+
+        TranslationsArray.Get(0, JsonToken);
+        TranslationObject := JsonToken.AsObject();
+        if not TranslationObject.Get('text', JsonToken) then
+            Error('Azure Translator response did not contain text.');
+
+        exit(JsonToken.AsValue().AsText());
+    end;
+
     local procedure GetSystemPrompt(PIMAISetup: Record "PIM AI Setup"): Text
     begin
         if PIMAISetup."System Prompt" <> '' then
@@ -240,12 +313,43 @@ codeunit 50102 "PIM AI Translator"
 
     local procedure ValidateSetup(PIMAISetup: Record "PIM AI Setup")
     begin
+        if PIMAISetup."API Key" = '' then
+            Error('Enter an API Key in PIM AI Setup.');
         if PIMAISetup."Endpoint URL" = '' then
             Error('Enter an Endpoint URL in PIM AI Setup.');
         if PIMAISetup."Deployment Name" = '' then
             Error('Enter a Model / Deployment Name in PIM AI Setup.');
+    end;
+
+    local procedure ValidateAzureTranslatorSetup(PIMAISetup: Record "PIM AI Setup")
+    begin
         if PIMAISetup."API Key" = '' then
-            Error('Enter an API Key in PIM AI Setup.');
+            Error('Enter the Azure Translator key in PIM AI Setup.');
+        if PIMAISetup."Endpoint URL" = '' then
+            Error('Enter the Azure Translator endpoint in PIM AI Setup.');
+        if PIMAISetup."API Region" = '' then
+            Error('Enter the API Region in PIM AI Setup, e.g. eastasia.');
+    end;
+
+    local procedure MapToTranslatorLanguage(LocaleTag: Text[20]): Code[10]
+    begin
+        case LowerCase(LocaleTag) of
+            'en', 'en-gb', 'enu':
+                exit('en');
+            'de', 'de-de', 'deu':
+                exit('de');
+            'de-ch', 'des':
+                exit('de');
+            else
+                exit(CopyStr(LowerCase(LocaleTag), 1, 2));
+        end;
+    end;
+
+    local procedure GetTranslatorEndpoint(EndpointURL: Text[250]): Text
+    begin
+        if EndpointURL = '' then
+            exit('https://api.cognitive.microsofttranslator.com');
+        exit(DelChr(EndpointURL, '>', '/'));
     end;
 
     local procedure GetClaudeEndpoint(EndpointURL: Text[250]): Text
