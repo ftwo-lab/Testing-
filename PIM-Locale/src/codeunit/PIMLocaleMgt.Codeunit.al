@@ -216,6 +216,162 @@ codeunit 50101 "PIM Locale Mgt."
         exit('');
     end;
 
+    procedure EnsureExtendedDetailTableSetup()
+    var
+        PIMLocaleTableSetup: Record "PIM Locale Table Setup";
+        ExtendedDetailTableNo: Integer;
+        ItemNoFieldNo: Integer;
+    begin
+        ExtendedDetailTableNo := GetExtendedDetailTableNo();
+        ItemNoFieldNo := GetExtendedDetailItemNoFieldNo();
+        if ExtendedDetailTableNo = 0 then
+            exit;
+
+        if PIMLocaleTableSetup.Get(ExtendedDetailTableNo, 0) then begin
+            PIMLocaleTableSetup."Link Field No." := ItemNoFieldNo;
+            PIMLocaleTableSetup."Translate All Fields" := true;
+            PIMLocaleTableSetup.Enabled := true;
+            PIMLocaleTableSetup.Description := 'Extended Detail Card';
+            PIMLocaleTableSetup.Modify(true);
+            exit;
+        end;
+
+        PIMLocaleTableSetup.Init();
+        PIMLocaleTableSetup."Table No." := ExtendedDetailTableNo;
+        PIMLocaleTableSetup."Field No." := 0;
+        PIMLocaleTableSetup."Link Field No." := ItemNoFieldNo;
+        PIMLocaleTableSetup."Translate All Fields" := true;
+        PIMLocaleTableSetup.Enabled := true;
+        PIMLocaleTableSetup.Description := 'Extended Detail Card';
+        PIMLocaleTableSetup.Insert(true);
+    end;
+
+    procedure GetExtendedDetailTableNo(): Integer
+    begin
+        exit(50116);
+    end;
+
+    procedure GetExtendedDetailItemNoFieldNo(): Integer
+    begin
+        exit(2);
+    end;
+
+    procedure ApplyLocaleFieldsToRecord(var SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    var
+        RecRef: RecordRef;
+        PIMItemLocaleField: Record "PIM Item Locale Field";
+        FieldRef: FieldRef;
+        SubKey: Code[20];
+    begin
+        if (LocaleCode = '') or (LocaleCode = GetSourceLocaleCode()) then
+            exit;
+
+        if ItemNo = '' then
+            exit;
+
+        RecRef.GetTable(SourceRecord);
+        SubKey := GetRecordSubKey(RecRef);
+
+        PIMItemLocaleField.SetRange("Item No.", ItemNo);
+        PIMItemLocaleField.SetRange("Locale Code", LocaleCode);
+        PIMItemLocaleField.SetRange("Table No.", RecRef.Number);
+        PIMItemLocaleField.SetRange("Sub Key", SubKey);
+        if not PIMItemLocaleField.FindSet() then begin
+            PIMItemLocaleField.SetRange("Sub Key");
+            if not PIMItemLocaleField.FindSet() then
+                exit;
+        end;
+
+        repeat
+            if RecRef.FieldExist(PIMItemLocaleField."Field No.") then begin
+                FieldRef := RecRef.Field(PIMItemLocaleField."Field No.");
+                SetFieldTextValue(FieldRef, PIMItemLocaleField.Value);
+            end;
+        until PIMItemLocaleField.Next() = 0;
+
+        RecRef.SetTable(SourceRecord);
+    end;
+
+    procedure SaveLocaleFieldsFromRecord(SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    var
+        RecRef: RecordRef;
+        FieldRef: FieldRef;
+        FieldIndex: Integer;
+    begin
+        if (LocaleCode = '') or (LocaleCode = GetSourceLocaleCode()) then
+            exit;
+
+        if ItemNo = '' then
+            exit;
+
+        RecRef.GetTable(SourceRecord);
+        for FieldIndex := 1 to RecRef.FieldCount do begin
+            FieldRef := RecRef.FieldIndex(FieldIndex);
+            if not IsTranslatableField(FieldRef) then
+                continue;
+
+            if GetFieldTextValue(FieldRef).Trim() = '' then
+                continue;
+
+            SaveItemLocaleFieldValue(
+                ItemNo, LocaleCode, RecRef.Number, FieldRef.Number, CopyStr(FieldRef.Name, 1, 80),
+                GetFieldTextValue(FieldRef), GetRecordLineNo(RecRef), GetRecordSubKey(RecRef));
+        end;
+    end;
+
+    procedure SaveLocaleMarketingText(ItemNo: Code[20]; LocaleCode: Code[10]; MarketingText: Text)
+    var
+        PIMItemLocaleData: Record "PIM Item Locale Data";
+    begin
+        if (LocaleCode = '') or (LocaleCode = GetSourceLocaleCode()) then
+            exit;
+
+        GetItemLocaleData(ItemNo, LocaleCode, PIMItemLocaleData);
+        PIMItemLocaleData."Marketing Text" := CopyStr(MarketingText, 1, MaxStrLen(PIMItemLocaleData."Marketing Text"));
+        SaveItemLocaleData(PIMItemLocaleData);
+    end;
+
+    procedure ApplyLocaleMarketingTextToRecord(var SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    var
+        MarketingText: Text;
+        RecRef: RecordRef;
+        FieldRef: FieldRef;
+        FieldIndex: Integer;
+    begin
+        MarketingText := GetLocaleMarketingText(ItemNo, LocaleCode);
+        if MarketingText = '' then
+            exit;
+
+        RecRef.GetTable(SourceRecord);
+        for FieldIndex := 1 to RecRef.FieldCount do begin
+            FieldRef := RecRef.FieldIndex(FieldIndex);
+            if FieldRef.Type <> FieldRef.Type::Text then
+                continue;
+            if FieldRef.Length < 250 then
+                continue;
+
+            SetFieldTextValue(FieldRef, MarketingText);
+            RecRef.SetTable(SourceRecord);
+            exit;
+        end;
+    end;
+
+    procedure GetItemNoFromRecord(SourceRecord: Variant): Code[20]
+    var
+        RecRef: RecordRef;
+        FieldRef: FieldRef;
+        FieldIndex: Integer;
+    begin
+        RecRef.GetTable(SourceRecord);
+        for FieldIndex := 1 to RecRef.FieldCount do begin
+            FieldRef := RecRef.FieldIndex(FieldIndex);
+            if FieldRef.Name in ['Item No.', 'No.'] then
+                exit(CopyStr(Format(FieldRef.Value()), 1, 20));
+        end;
+
+        exit('');
+    end;
+
     local procedure TranslateItemExtendedTexts(ItemNo: Code[20]; TargetLocaleCode: Code[10]; SourceLocale: Record "PIM Locale"; TargetLocale: Record "PIM Locale"): Integer
     var
         ExtendedTextHeader: Record "Extended Text Header";

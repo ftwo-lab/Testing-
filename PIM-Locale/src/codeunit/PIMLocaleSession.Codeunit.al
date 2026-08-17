@@ -5,6 +5,7 @@ codeunit 50100 "PIM Locale Session"
     var
         ActiveLocaleCode: Code[10];
         LocaleInitialized: Boolean;
+        CurrentItemNo: Code[20];
 
     procedure SetActiveLocale(LocaleCode: Code[10])
     begin
@@ -33,5 +34,15 @@ codeunit 50100 "PIM Locale Session"
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
     begin
         SetActiveLocale(PIMLocaleMgt.GetSourceLocaleCode());
+    end;
+
+    procedure SetCurrentItemNo(ItemNo: Code[20])
+    begin
+        CurrentItemNo := ItemNo;
+    end;
+
+    procedure GetCurrentItemNo(): Code[20]
+    begin
+        exit(CurrentItemNo);
     end;
 }

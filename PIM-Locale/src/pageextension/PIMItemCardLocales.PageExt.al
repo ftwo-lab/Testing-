@@ -9,24 +9,10 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                 ApplicationArea = All;
                 SubPageLink = "Item No." = field("No.");
             }
-            part(PIMLocaleMarketingText; "PIM Item Locale Marketing Text")
-            {
-                ApplicationArea = All;
-                Caption = 'Marketing Text (Locale)';
-                SubPageLink = "Item No." = field("No.");
-                Visible = not SourceLocaleActive;
-            }
             part(PIMLocaleAttributes; "PIM Item Locale Attributes")
             {
                 ApplicationArea = All;
                 Caption = 'Item Attributes (Locale)';
-                SubPageLink = "Item No." = field("No.");
-                Visible = not SourceLocaleActive;
-            }
-            part(PIMLocaleRelatedFields; "PIM Item Locale Related Fields")
-            {
-                ApplicationArea = All;
-                Caption = 'Extended Details (Locale)';
                 SubPageLink = "Item No." = field("No.");
                 Visible = not SourceLocaleActive;
             }
@@ -46,7 +32,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
             group(PIMLocales)
             {
                 Caption = 'Locales';
-                ToolTip = 'Select a language. All item text, marketing text, attributes, and extended details are translated and shown on this page.';
+                ToolTip = 'Select a language. Item fields, marketing text, attributes, and extended details are translated in their own pages.';
                 Image = Language;
 
                 action(LocaleEnglish)
@@ -66,7 +52,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Germany';
                     Image = Language;
-                    ToolTip = 'Translate all item data to German and show it on this page.';
+                    ToolTip = 'Translate all item data to German. Open Extended Details and Marketing Text to view it there.';
 
                     trigger OnAction()
                     begin
@@ -78,7 +64,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'Swiss German';
                     Image = Language;
-                    ToolTip = 'Translate all item data to Swiss German and show it on this page.';
+                    ToolTip = 'Translate all item data to Swiss German. Open Extended Details and Marketing Text to view it there.';
 
                     trigger OnAction()
                     begin
@@ -90,7 +76,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
                     ApplicationArea = All;
                     Caption = 'View All Translated Data';
                     Image = ViewDetails;
-                    ToolTip = 'Open a list of every translated field for the active locale, including extended details.';
+                    ToolTip = 'Open a list of every translated field for the active locale.';
 
                     trigger OnAction()
                     var
@@ -126,6 +112,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
         PIMLocaleSession: Codeunit "PIM Locale Session";
     begin
         PIMLocaleMgt.EnsureDefaultLocales();
+        PIMLocaleMgt.EnsureExtendedDetailTableSetup();
         PIMLocaleSession.ResetToSourceLocale();
         ActiveLocaleCode := PIMLocaleSession.GetActiveLocale();
         SourceLocaleActive := ActiveLocaleCode = PIMLocaleMgt.GetSourceLocaleCode();
@@ -135,7 +122,10 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
     var
         Item: Record Item;
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
+        PIMLocaleSession: Codeunit "PIM Locale Session";
     begin
+        PIMLocaleSession.SetCurrentItemNo(Rec."No.");
+
         if SourceLocaleActive then
             exit;
 
@@ -200,7 +190,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
 
         UpdateLocaleFactboxes();
         Message(
-          'All item data translated to %1: fields, marketing text, attributes, and configured extended details.',
+          'Translated to %1. Open Extended Details and Marketing Text to see translated content there.',
           PIMLocaleMgt.GetLocaleName(LocaleCode));
     end;
 
@@ -209,9 +199,7 @@ pageextension 50100 "PIM Item Card Locales" extends "Item Card"
         if SourceLocaleActive then
             exit;
 
-        CurrPage.PIMLocaleMarketingText.Page.RefreshForActiveLocale();
         CurrPage.PIMLocaleAttributes.Page.RefreshForActiveLocale();
-        CurrPage.PIMLocaleRelatedFields.Page.RefreshForActiveLocale();
         CurrPage.PIMLocaleFields.Page.RefreshForActiveLocale();
     end;
 }

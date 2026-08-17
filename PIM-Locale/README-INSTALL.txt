@@ -67,22 +67,24 @@ Use Processing -> Locales -> View All Translated Data for one full list.
 
 STEP 5: Configure Extended Details table
 ----------------------------------------
-Your Extended Details button opens a custom ZVG table. Register it once:
+Your Extended Detail Card uses table 50116 Extended Text (Item No. = field 2).
+This is registered automatically on install/open.
 
-1. Search: PIM Locale Table Setup
-2. Add a line:
-   - Table No. = your Extended Details table number
-   - Link Field No. = field number that stores Item No.
-   - Translate All Fields = ON
-   - Enabled = ON
-3. Use action "Show Table Fields" to find field numbers
+If your table number is different, change these procedures in PIM Locale Mgt.:
+  GetExtendedDetailTableNo()
+  GetExtendedDetailItemNoFieldNo()
 
-Example: if Extended Details table is 50123 and Item No. is field 2:
-  Table No. = 50123
-  Link Field No. = 2
-  Translate All Fields = ON
+Or add your own line in PIM Locale Table Setup manually.
 
-After setup, translate again with Locales -> Germany.
+STEP 6: Where translated content appears
+----------------------------------------
+After Locales -> Germany or Swiss German:
+
+1. Item Card main fields = translated in place
+2. Home -> Extended Details action = translated on Extended Detail Card page
+3. Marketing Text action = translated on Edit Marketing Text page
+
+Marketing Text and Extended Details are NO LONGER shown in separate locale factboxes.
 
 FILES INCLUDED
 --------------
