@@ -43,6 +43,7 @@ table/
 
 enum/
   PIMTranslationStatus.Enum.al
+  PIMAIProvider.Enum.al
 
 codeunit/
   PIMLocaleSession.Codeunit.al
