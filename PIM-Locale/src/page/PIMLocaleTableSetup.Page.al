@@ -72,7 +72,7 @@ page 50105 "PIM Locale Table Setup"
                         Error('Select a table first.');
 
                     Field.SetRange(TableNo, Rec."Table No.");
-                    Page.Run(Page::"Field List", Field);
+                    Page.Run(Page::Fields, Field);
                 end;
             }
         }
