@@ -31,6 +31,10 @@ table 50104 "PIM Item Locale Field"
         {
             Caption = 'Value';
         }
+        field(9; "Long Value"; Blob)
+        {
+            Caption = 'Long Value';
+        }
         field(7; "Line No."; Integer)
         {
             Caption = 'Line No.';

@@ -12,6 +12,11 @@ pageextension 50111 "PIM Extended Detail Card Locales" extends "Extended Detail 
         ApplyActiveLocaleToPage();
     end;
 
+    trigger OnAfterGetCurrRecord()
+    begin
+        ApplyActiveLocaleToPage();
+    end;
+
     trigger OnModifyRecord(): Boolean
     begin
         SaveActiveLocaleFromPage();
