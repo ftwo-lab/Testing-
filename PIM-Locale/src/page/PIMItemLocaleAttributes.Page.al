@@ -1,9 +1,9 @@
-page 50104 "PIM Item Locale Fields"
+page 50107 "PIM Item Locale Attributes"
 {
     PageType = ListPart;
     ApplicationArea = All;
-    SourceTable = "PIM Item Locale Field";
-    Caption = 'Translated Fields';
+    SourceTable = "PIM Item Locale Attribute";
+    Caption = 'Item Attributes (Locale)';
     Editable = false;
     InsertAllowed = false;
     DeleteAllowed = false;
@@ -12,13 +12,9 @@ page 50104 "PIM Item Locale Fields"
     {
         area(Content)
         {
-            repeater(Fields)
+            repeater(Attributes)
             {
-                field("Field Name"; Rec."Field Name")
-                {
-                    ApplicationArea = All;
-                }
-                field("Table No."; Rec."Table No.")
+                field("Attribute Name"; Rec."Attribute Name")
                 {
                     ApplicationArea = All;
                 }
@@ -32,16 +28,16 @@ page 50104 "PIM Item Locale Fields"
 
     trigger OnOpenPage()
     begin
-        ApplyFilters();
+        ApplyLocaleFilter();
     end;
 
     procedure RefreshForActiveLocale()
     begin
-        ApplyFilters();
+        ApplyLocaleFilter();
         CurrPage.Update(false);
     end;
 
-    local procedure ApplyFilters()
+    local procedure ApplyLocaleFilter()
     var
         PIMLocaleSession: Codeunit "PIM Locale Session";
     begin

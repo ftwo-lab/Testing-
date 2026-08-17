@@ -65,6 +65,18 @@ page 50100 "PIM Locales"
                     CurrPage.Update(false);
                 end;
             }
+            action(OpenTableSetup)
+            {
+                ApplicationArea = All;
+                Caption = 'Locale Table Setup';
+                Image = SetupList;
+                ToolTip = 'Configure custom tables such as Extended Details for translation.';
+
+                trigger OnAction()
+                begin
+                    Page.Run(Page::"PIM Locale Table Setup");
+                end;
+            }
         }
     }
 }

@@ -31,11 +31,19 @@ table 50104 "PIM Item Locale Field"
         {
             Caption = 'Value';
         }
+        field(7; "Line No."; Integer)
+        {
+            Caption = 'Line No.';
+        }
+        field(8; "Sub Key"; Code[20])
+        {
+            Caption = 'Sub Key';
+        }
     }
 
     keys
     {
-        key(PK; "Item No.", "Locale Code", "Table No.", "Field No.")
+        key(PK; "Item No.", "Locale Code", "Table No.", "Field No.", "Line No.", "Sub Key")
         {
             Clustered = true;
         }

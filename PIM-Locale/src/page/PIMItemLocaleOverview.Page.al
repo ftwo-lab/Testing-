@@ -1,9 +1,9 @@
-page 50104 "PIM Item Locale Fields"
+page 50109 "PIM Item Locale Overview"
 {
-    PageType = ListPart;
+    PageType = Worksheet;
     ApplicationArea = All;
     SourceTable = "PIM Item Locale Field";
-    Caption = 'Translated Fields';
+    Caption = 'All Translated Item Data';
     Editable = false;
     InsertAllowed = false;
     DeleteAllowed = false;
@@ -12,17 +12,22 @@ page 50104 "PIM Item Locale Fields"
     {
         area(Content)
         {
-            repeater(Fields)
+            repeater(AllFields)
             {
-                field("Field Name"; Rec."Field Name")
-                {
-                    ApplicationArea = All;
-                }
                 field("Table No."; Rec."Table No.")
                 {
                     ApplicationArea = All;
                 }
+                field("Field Name"; Rec."Field Name")
+                {
+                    ApplicationArea = All;
+                }
                 field(Value; Rec.Value)
+                {
+                    ApplicationArea = All;
+                    MultiLine = true;
+                }
+                field("Locale Code"; Rec."Locale Code")
                 {
                     ApplicationArea = All;
                 }
@@ -31,22 +36,14 @@ page 50104 "PIM Item Locale Fields"
     }
 
     trigger OnOpenPage()
-    begin
-        ApplyFilters();
-    end;
-
-    procedure RefreshForActiveLocale()
-    begin
-        ApplyFilters();
-        CurrPage.Update(false);
-    end;
-
-    local procedure ApplyFilters()
     var
         PIMLocaleSession: Codeunit "PIM Locale Session";
     begin
-        Rec.FilterGroup(2);
         Rec.SetRange("Locale Code", PIMLocaleSession.GetActiveLocale());
-        Rec.FilterGroup(0);
+    end;
+
+    procedure SetItemNo(ItemNo: Code[20])
+    begin
+        Rec.SetRange("Item No.", ItemNo);
     end;
 }

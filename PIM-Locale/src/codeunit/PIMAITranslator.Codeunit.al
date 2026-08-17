@@ -284,7 +284,7 @@ codeunit 50102 "PIM AI Translator"
 
         HttpClient.DefaultRequestHeaders().Clear();
         HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Key', PIMAISetup."API Key");
-        HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Region', PIMAISetup."API Region");
+        HttpClient.DefaultRequestHeaders().Add('Ocp-Apim-Subscription-Region', LowerCase(PIMAISetup."API Region"));
 
         if not HttpClient.Post(Url, HttpContent, HttpResponseMessage) then
             Error('Could not connect to Azure Translator at %1. Check Allow HTTPClient Requests in Extension Management.', Url);
@@ -354,28 +354,29 @@ codeunit 50102 "PIM AI Translator"
             Error('Enter the API Region in PIM AI Setup, e.g. eastasia.');
     end;
 
-    local procedure MapToTranslatorLanguage(LocaleTag: Text[20]): Code[10]
+    local procedure MapToTranslatorLanguage(LocaleTag: Text[20]): Text[10]
+    var
+        TagLower: Text[20];
     begin
-        case LowerCase(LocaleTag) of
-            'en', 'en-gb', 'enu':
+        TagLower := LowerCase(DelChr(LocaleTag, '<>', ' '));
+
+        case TagLower of
+            'en', 'en-gb', 'enu', 'english':
                 exit('en');
-            'de', 'de-de', 'deu':
+            'de', 'de-de', 'deu', 'germany', 'german':
                 exit('de');
-            'de-ch', 'des':
+            'de-ch', 'des', 'ch', 'swiss german', 'swiss':
                 exit('de');
             else
-                exit(CopyStr(LowerCase(LocaleTag), 1, 2));
+                if StrLen(TagLower) >= 2 then
+                    exit(CopyStr(TagLower, 1, 2));
         end;
+
+        exit('en');
     end;
 
     local procedure GetTranslatorEndpoint(EndpointURL: Text[250]; APIRegion: Code[20]): Text
-    var
-        RegionText: Text;
     begin
-        RegionText := LowerCase(DelChr(APIRegion, '<>', ' '));
-        if RegionText <> '' then
-            exit('https://' + RegionText + '.api.cognitive.microsofttranslator.com');
-
         if EndpointURL <> '' then
             exit(DelChr(EndpointURL, '>', '/'));
 

@@ -1,9 +1,9 @@
-page 50104 "PIM Item Locale Fields"
+page 50108 "PIM Item Locale Related Fields"
 {
     PageType = ListPart;
     ApplicationArea = All;
     SourceTable = "PIM Item Locale Field";
-    Caption = 'Translated Fields';
+    Caption = 'Extended Details (Locale)';
     Editable = false;
     InsertAllowed = false;
     DeleteAllowed = false;
@@ -12,19 +12,23 @@ page 50104 "PIM Item Locale Fields"
     {
         area(Content)
         {
-            repeater(Fields)
+            repeater(RelatedFields)
             {
                 field("Field Name"; Rec."Field Name")
                 {
                     ApplicationArea = All;
-                }
-                field("Table No."; Rec."Table No.")
-                {
-                    ApplicationArea = All;
+                    Caption = 'Field';
                 }
                 field(Value; Rec.Value)
                 {
                     ApplicationArea = All;
+                    Caption = 'Translated Value';
+                    MultiLine = true;
+                }
+                field("Table No."; Rec."Table No.")
+                {
+                    ApplicationArea = All;
+                    Visible = false;
                 }
             }
         }
@@ -47,6 +51,7 @@ page 50104 "PIM Item Locale Fields"
     begin
         Rec.FilterGroup(2);
         Rec.SetRange("Locale Code", PIMLocaleSession.GetActiveLocale());
+        Rec.SetFilter("Table No.", '<>%1&<>%2', Database::Item, Database::"Extended Text Line");
         Rec.FilterGroup(0);
     end;
 }

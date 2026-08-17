@@ -1,0 +1,33 @@
+{
+  "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "name": "PIM Locale",
+  "publisher": "ZVG",
+  "version": "1.0.0.4",
+  "brief": "Akeneo-style locale switcher with AI translation for all Item data",
+  "description": "Switch Item content between English, Germany, and Swiss German. Translate item fields, marketing text, attributes, and configured extended details via Azure Translator, Claude, or Azure OpenAI.",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "24.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false
+  },
+  "runtime": "13.0",
+  "features": [
+    "TranslationFile"
+  ],
+  "allowHttpClientRequests": true
+}
