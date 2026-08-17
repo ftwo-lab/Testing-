@@ -259,8 +259,8 @@ codeunit 50102 "PIM AI Translator"
         TranslationObject: JsonObject;
         JsonToken: JsonToken;
         Url: Text;
-        FromLang: Code[10];
-        ToLang: Code[10];
+        FromLang: Text[10];
+        ToLang: Text[10];
     begin
         ValidateAzureTranslatorSetup(PIMAISetup);
 
