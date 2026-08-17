@@ -1,0 +1,32 @@
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "PIM Locales",
+  "publisher": "Your Company",
+  "version": "1.0.0.0",
+  "brief": "Akeneo-style locale switcher with AI translation for Item data",
+  "description": "Switch Item content between Germany, Swiss German, and English locales. Translate fields via Azure OpenAI.",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "24.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false
+  },
+  "runtime": "13.0",
+  "features": [
+    "TranslationFile"
+  ]
+}
