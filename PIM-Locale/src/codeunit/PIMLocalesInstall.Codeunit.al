@@ -8,6 +8,7 @@ codeunit 50103 "PIM Locales Install"
         PIMAISetup: Record "PIM AI Setup";
     begin
         PIMLocaleMgt.EnsureDefaultLocales();
+        PIMLocaleMgt.EnsureExtendedDetailTableSetup();
 
         if not PIMAISetup.Get() then begin
             PIMAISetup.Init();

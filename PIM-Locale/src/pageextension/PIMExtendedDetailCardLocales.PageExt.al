@@ -22,32 +22,37 @@ pageextension 50111 "PIM Extended Detail Card Locales" extends "Extended Detail 
     var
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
         PIMLocaleSession: Codeunit "PIM Locale Session";
+        RecRef: RecordRef;
         ItemNo: Code[20];
     begin
         if PIMLocaleSession.IsSourceLocaleActive() then
             exit;
 
-        ItemNo := PIMLocaleMgt.GetItemNoFromRecord(Rec);
+        RecRef.GetTable(Rec);
+        ItemNo := PIMLocaleMgt.GetItemNoFromRecord(RecRef);
         if ItemNo = '' then
             exit;
 
         PIMLocaleSession.SetCurrentItemNo(ItemNo);
-        PIMLocaleMgt.ApplyLocaleFieldsToRecord(Rec, ItemNo, PIMLocaleSession.GetActiveLocale());
+        PIMLocaleMgt.ApplyLocaleFieldsToRecord(RecRef, ItemNo, PIMLocaleSession.GetActiveLocale());
+        RecRef.SetTable(Rec);
     end;
 
     local procedure SaveActiveLocaleFromPage()
     var
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
         PIMLocaleSession: Codeunit "PIM Locale Session";
+        RecRef: RecordRef;
         ItemNo: Code[20];
     begin
         if PIMLocaleSession.IsSourceLocaleActive() then
             exit;
 
-        ItemNo := PIMLocaleMgt.GetItemNoFromRecord(Rec);
+        RecRef.GetTable(Rec);
+        ItemNo := PIMLocaleMgt.GetItemNoFromRecord(RecRef);
         if ItemNo = '' then
             exit;
 
-        PIMLocaleMgt.SaveLocaleFieldsFromRecord(Rec, ItemNo, PIMLocaleSession.GetActiveLocale());
+        PIMLocaleMgt.SaveLocaleFieldsFromRecord(RecRef, ItemNo, PIMLocaleSession.GetActiveLocale());
     end;
 }

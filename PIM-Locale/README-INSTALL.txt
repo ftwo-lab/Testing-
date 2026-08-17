@@ -121,3 +121,5 @@ page/
 
 pageextension/
   PIMItemCardLocales.PageExt.al
+  PIMExtendedDetailCardLocales.PageExt.al
+  PIMEditMarketingTextLocales.PageExt.al

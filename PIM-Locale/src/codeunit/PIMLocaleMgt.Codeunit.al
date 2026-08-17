@@ -256,9 +256,8 @@ codeunit 50101 "PIM Locale Mgt."
         exit(2);
     end;
 
-    procedure ApplyLocaleFieldsToRecord(var SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    procedure ApplyLocaleFieldsToRecord(var RecRef: RecordRef; ItemNo: Code[20]; LocaleCode: Code[10])
     var
-        RecRef: RecordRef;
         PIMItemLocaleField: Record "PIM Item Locale Field";
         FieldRef: FieldRef;
         SubKey: Code[20];
@@ -269,7 +268,6 @@ codeunit 50101 "PIM Locale Mgt."
         if ItemNo = '' then
             exit;
 
-        RecRef.GetTable(SourceRecord);
         SubKey := GetRecordSubKey(RecRef);
 
         PIMItemLocaleField.SetRange("Item No.", ItemNo);
@@ -288,13 +286,10 @@ codeunit 50101 "PIM Locale Mgt."
                 SetFieldTextValue(FieldRef, PIMItemLocaleField.Value);
             end;
         until PIMItemLocaleField.Next() = 0;
-
-        RecRef.SetTable(SourceRecord);
     end;
 
-    procedure SaveLocaleFieldsFromRecord(SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    procedure SaveLocaleFieldsFromRecord(RecRef: RecordRef; ItemNo: Code[20]; LocaleCode: Code[10])
     var
-        RecRef: RecordRef;
         FieldRef: FieldRef;
         FieldIndex: Integer;
     begin
@@ -304,7 +299,6 @@ codeunit 50101 "PIM Locale Mgt."
         if ItemNo = '' then
             exit;
 
-        RecRef.GetTable(SourceRecord);
         for FieldIndex := 1 to RecRef.FieldCount do begin
             FieldRef := RecRef.FieldIndex(FieldIndex);
             if not IsTranslatableField(FieldRef) then
@@ -331,10 +325,9 @@ codeunit 50101 "PIM Locale Mgt."
         SaveItemLocaleData(PIMItemLocaleData);
     end;
 
-    procedure ApplyLocaleMarketingTextToRecord(var SourceRecord: Variant; ItemNo: Code[20]; LocaleCode: Code[10])
+    procedure ApplyLocaleMarketingTextToRecord(var RecRef: RecordRef; ItemNo: Code[20]; LocaleCode: Code[10])
     var
         MarketingText: Text;
-        RecRef: RecordRef;
         FieldRef: FieldRef;
         FieldIndex: Integer;
     begin
@@ -342,27 +335,24 @@ codeunit 50101 "PIM Locale Mgt."
         if MarketingText = '' then
             exit;
 
-        RecRef.GetTable(SourceRecord);
         for FieldIndex := 1 to RecRef.FieldCount do begin
             FieldRef := RecRef.FieldIndex(FieldIndex);
-            if FieldRef.Type <> FieldRef.Type::Text then
+            if not IsTranslatableField(FieldRef) then
                 continue;
-            if FieldRef.Length < 250 then
-                continue;
+            if FieldRef.Type = FieldRef.Type::Text then
+                if FieldRef.Length < 250 then
+                    continue;
 
             SetFieldTextValue(FieldRef, MarketingText);
-            RecRef.SetTable(SourceRecord);
             exit;
         end;
     end;
 
-    procedure GetItemNoFromRecord(SourceRecord: Variant): Code[20]
+    procedure GetItemNoFromRecord(RecRef: RecordRef): Code[20]
     var
-        RecRef: RecordRef;
         FieldRef: FieldRef;
         FieldIndex: Integer;
     begin
-        RecRef.GetTable(SourceRecord);
         for FieldIndex := 1 to RecRef.FieldCount do begin
             FieldRef := RecRef.FieldIndex(FieldIndex);
             if FieldRef.Name in ['Item No.', 'No.'] then
@@ -668,6 +658,15 @@ codeunit 50101 "PIM Locale Mgt."
         case FieldRef.Type of
             FieldRef.Type::Text:
                 exit(true);
+            FieldRef.Type::Blob:
+                begin
+                    FieldNameLower := LowerCase(FieldRef.Name);
+                    exit(
+                      (StrPos(FieldNameLower, 'description') > 0) or
+                      (StrPos(FieldNameLower, 'comment') > 0) or
+                      (StrPos(FieldNameLower, 'text') > 0) or
+                      (StrPos(FieldNameLower, 'instruction') > 0));
+                end;
             FieldRef.Type::Code:
                 begin
                     FieldNameLower := LowerCase(FieldRef.Name);
@@ -683,12 +682,33 @@ codeunit 50101 "PIM Locale Mgt."
     end;
 
     local procedure GetFieldTextValue(FieldRef: FieldRef): Text
+    var
+        TempBlob: Codeunit "Temp Blob";
+        InStream: InStream;
+        Result: Text;
     begin
+        if FieldRef.Type = FieldRef.Type::Blob then begin
+            TempBlob.FromFieldRef(FieldRef);
+            TempBlob.CreateInStream(InStream, TEXTENCODING::UTF8);
+            InStream.ReadText(Result);
+            exit(Result);
+        end;
+
         exit(Format(FieldRef.Value(), 0, 9));
     end;
 
     local procedure SetFieldTextValue(var FieldRef: FieldRef; Value: Text)
+    var
+        TempBlob: Codeunit "Temp Blob";
+        OutStream: OutStream;
     begin
+        if FieldRef.Type = FieldRef.Type::Blob then begin
+            TempBlob.CreateOutStream(OutStream, TEXTENCODING::UTF8);
+            OutStream.WriteText(Value);
+            TempBlob.ToFieldRef(FieldRef);
+            exit;
+        end;
+
         case FieldRef.Type of
             FieldRef.Type::Text:
                 FieldRef.Value := CopyStr(Value, 1, FieldRef.Length());

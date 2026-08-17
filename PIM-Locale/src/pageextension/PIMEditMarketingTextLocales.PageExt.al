@@ -20,18 +20,21 @@ pageextension 50112 "PIM Edit Marketing Text Locales" extends "Edit Marketing Te
     var
         PIMLocaleMgt: Codeunit "PIM Locale Mgt.";
         PIMLocaleSession: Codeunit "PIM Locale Session";
+        RecRef: RecordRef;
         ItemNo: Code[20];
     begin
         if PIMLocaleSession.IsSourceLocaleActive() then
             exit;
 
         ItemNo := PIMLocaleSession.GetCurrentItemNo();
+        RecRef.GetTable(Rec);
         if ItemNo = '' then
-            ItemNo := PIMLocaleMgt.GetItemNoFromRecord(Rec);
+            ItemNo := PIMLocaleMgt.GetItemNoFromRecord(RecRef);
         if ItemNo = '' then
             exit;
 
-        PIMLocaleMgt.ApplyLocaleMarketingTextToRecord(Rec, ItemNo, PIMLocaleSession.GetActiveLocale());
+        PIMLocaleMgt.ApplyLocaleMarketingTextToRecord(RecRef, ItemNo, PIMLocaleSession.GetActiveLocale());
+        RecRef.SetTable(Rec);
     end;
 
     local procedure SaveActiveLocaleFromPage()
@@ -54,12 +57,13 @@ pageextension 50112 "PIM Edit Marketing Text Locales" extends "Edit Marketing Te
         RecRef.GetTable(Rec);
         for FieldIndex := 1 to RecRef.FieldCount do begin
             FieldRef := RecRef.FieldIndex(FieldIndex);
-            if FieldRef.Type <> FieldRef.Type::Text then
-                continue;
-            if FieldRef.Length < 250 then
+            if not PIMLocaleMgt.IsTranslatableFieldForLocale(FieldRef) then
                 continue;
 
-            MarketingText := Format(FieldRef.Value(), 0, 9);
+            MarketingText := PIMLocaleMgt.GetFieldTextValueForLocale(FieldRef);
+            if MarketingText.Trim() = '' then
+                continue;
+
             PIMLocaleMgt.SaveLocaleMarketingText(ItemNo, PIMLocaleSession.GetActiveLocale(), MarketingText);
             exit;
         end;
