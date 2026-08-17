@@ -9,25 +9,31 @@ table 50102 "PIM AI Setup"
         {
             Caption = 'Primary Key';
         }
-        field(2; "Endpoint URL"; Text[250])
+        field(2; "AI Provider"; Enum "PIM AI Provider")
+        {
+            Caption = 'AI Provider';
+            InitValue = Claude;
+        }
+        field(3; "Endpoint URL"; Text[250])
         {
             Caption = 'Endpoint URL';
             ExtendedDatatype = URL;
         }
-        field(3; "Deployment Name"; Text[100])
+        field(4; "Deployment Name"; Text[100])
         {
-            Caption = 'Deployment Name';
+            Caption = 'Model / Deployment Name';
+            ToolTip = 'Azure: deployment name, e.g. gpt-4o-mini. Claude: model name, e.g. claude-sonnet-4-20250514.';
         }
-        field(4; "API Key"; Text[250])
+        field(5; "API Key"; Text[250])
         {
             Caption = 'API Key';
             ExtendedDatatype = Masked;
         }
-        field(5; Enabled; Boolean)
+        field(6; Enabled; Boolean)
         {
             Caption = 'Enabled';
         }
-        field(6; "System Prompt"; Text[2048])
+        field(7; "System Prompt"; Text[2048])
         {
             Caption = 'System Prompt';
         }
