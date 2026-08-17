@@ -24,6 +24,8 @@ page 50104 "PIM Item Locale Fields"
                 }
             }
         }
+    }
+
     trigger OnOpenPage()
     var
         PIMLocaleSession: Codeunit "PIM Locale Session";

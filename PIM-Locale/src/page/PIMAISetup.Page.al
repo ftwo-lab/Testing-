@@ -103,7 +103,8 @@ page 50101 "PIM AI Setup"
             Rec."Endpoint URL" := 'https://api.cognitive.microsofttranslator.com';
             Rec."API Region" := 'eastasia';
             Rec.Insert();
-        end;
+        end else
+            EnsureTranslatorDefaults();
 
         TranslatorEndpointHelp := 'https://api.cognitive.microsofttranslator.com';
         TranslatorRegionHelp := 'eastasia';

@@ -27,6 +27,7 @@ table 50102 "PIM AI Setup"
         field(8; "API Region"; Code[20])
         {
             Caption = 'API Region';
+            InitValue = eastasia;
             ToolTip = 'Azure Translator only. Region of your Translator resource, e.g. eastasia, westeurope.';
         }
         field(5; "API Key"; Text[250])
