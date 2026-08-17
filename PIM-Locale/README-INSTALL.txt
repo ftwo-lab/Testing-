@@ -115,6 +115,7 @@ page/
   PIMItemLocaleAttributes.Page.al
   PIMItemLocaleRelatedFields.Page.al
   PIMItemLocaleOverview.Page.al
+  PIMTableFieldList.Page.al
 
 pageextension/
   PIMItemCardLocales.PageExt.al
