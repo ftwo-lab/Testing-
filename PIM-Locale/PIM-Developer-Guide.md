@@ -714,4 +714,38 @@ A: Future feature using Azure **Document Translation** API — separate from tex
 
 ---
 
+## Appendix A — Further reading & research links
+
+Recommended articles for developers new to PIM and Business Central:
+
+### 1. What is a PIM? (Akeneo — industry reference)
+**URL:** https://www.akeneo.com/what-is-a-pim/  
+Clear introduction to Product Information Management: central source of truth, enrichment, locales, channels, and syndication. Our locale model is inspired by Akeneo concepts.
+
+### 2. Business Central vs. PIM: Where Should Product Data Live? (Truvio)
+**URL:** https://truvio.com/truvio-blog/business-central-vs.-pim-where-should-product-data-live  
+Explains what BC should own (SKU, inventory, pricing) vs what PIM should own (descriptions, media, translations, channel content). Directly relevant to our BC-as-main-source strategy.
+
+### 3. Why product data management belongs inside Business Central (Tinx-IT / Pimics)
+**URL:** https://www.tinx-it.com/news/why-product-data-management-belongs-inside-business-central-and-how-tinx-and-pimics-make-it-happen/  
+Describes building PIM as a native BC extension instead of external sync — same architectural approach as our ZVG solution.
+
+### 4. Business Central Product Sync & PIM Patterns (Top Dynamics Partners)
+**URL:** https://topdynamicspartners.com/learn/business-central/product-sync  
+Covers BC as lightweight PIM, external PIM integration patterns, multi-channel sync, and when to add dedicated PIM vs extending BC.
+
+### 5. Add marketing text to items (Microsoft Learn — official BC docs)
+**URL:** https://learn.microsoft.com/en-us/dynamics365/business-central/item-marketing-text  
+Official Microsoft documentation for BC Marketing Text (Entity Text) — relevant to our Marketing Text locale translation feature.
+
+---
+
+## Appendix B — Word document
+
+A formatted **Word version** of this guide is available in the repository:
+
+`PIM-Locale/PIM-Developer-Guide.docx`
+
+---
+
 *Prepared for ZVG / third-party developer handoff. Business Central remains the main source. PIM locale extension enriches product content for multi-market, multi-channel distribution.*
