@@ -1,257 +1,537 @@
-# PIM Developer Guide
-## Building a Product Information Management System on Microsoft Dynamics 365 Business Central
+# Product Information Management (PIM) on Business Central
+## Technical Architecture & Developer Handbook
 
-**Audience:** Fresh developers joining the ZVG / ICS Master project  
-**Purpose:** Explain what PIM is, how it differs from Business Central, and how we are building a PIM solution **with Business Central as the main source of truth**.
-
-**Version:** 1.0  
-**Date:** August 2026  
-**Reference implementation:** `PIM-Locale` folder in this repository
-
----
-
-## 1. Executive summary (read this first)
-
-| Question | Short answer |
-|----------|--------------|
-| **What is PIM?** | A system to manage rich product content (descriptions, images, attributes, translations) for many channels (web, print, marketplaces). |
-| **What is Business Central?** | An ERP system for finance, inventory, sales, purchasing, and operations. |
-| **Are they the same?** | **No.** BC is the operational backbone. PIM is the product content layer on top. |
-| **Our approach** | **Business Central is the main source.** We extend BC with PIM features (locales, translations, extended details, attributes) instead of buying a separate PIM and syncing everything. |
-| **Inspiration** | Akeneo-style locales (EN / DE / CH) with AI translation, shown directly on the Item Card. |
+| | |
+|---|---|
+| **Project** | ZVG / ICS Master by ZVG |
+| **Platform** | Microsoft Dynamics 365 Business Central |
+| **Approach** | Business Central as the **main source of truth** with an embedded PIM layer |
+| **Audience** | New developers and third-party implementation partners |
+| **Version** | 2.0 |
+| **Date** | August 2026 |
+| **Code reference** | `PIM-Locale/` in repository `ftwo-lab/Testing-` |
 
 ---
 
-## 2. What is PIM?
+## Table of contents
 
-**PIM = Product Information Management**
+1. [Purpose of this document](#1-purpose-of-this-document)  
+2. [Executive summary](#2-executive-summary)  
+3. [What is PIM?](#3-what-is-pim)  
+4. [What is Business Central?](#4-what-is-business-central)  
+5. [PIM vs Business Central](#5-pim-vs-business-central)  
+6. [Solution strategy: BC as the PIM backbone](#6-solution-strategy-bc-as-the-pim-backbone)  
+7. [System architecture](#7-system-architecture)  
+8. [Product data model — entities and fields](#8-product-data-model--entities-and-fields)  
+9. [Product families, related items, and shared content](#9-product-families-related-items-and-shared-content)  
+10. [Locales and translation](#10-locales-and-translation)  
+11. [SharePoint attachments and documents (future)](#11-sharepoint-attachments-and-documents-future)  
+12. [Technical implementation (AL extension)](#12-technical-implementation-al-extension)  
+13. [Data flow diagrams](#13-data-flow-diagrams)  
+14. [Developer environment setup](#14-developer-environment-setup)  
+15. [Feature status and roadmap](#15-feature-status-and-roadmap)  
+16. [Glossary](#16-glossary)  
+17. [FAQ](#17-faq)  
+18. [Repository and key object references](#18-repository-and-key-object-references)
 
-PIM is software used to:
+---
 
-- Store and organize **product information** in one place
-- Manage **multiple languages** (locales)
-- Manage **attributes** (color, size, material, certifications)
-- Manage **marketing text**, SEO content, images, documents
-- Publish the same product data to **many channels**:
-  - Company website (Shopify, Magento, etc.)
-  - Marketplaces (Amazon, eBay)
-  - Printed catalogs and sales documents
-  - B2B portals
+## 1. Purpose of this document
 
-### Real-world example
+This handbook is written for a **developer who is new to PIM and Business Central**. It explains:
 
-A cleaning product in our system:
+- What we are building and why  
+- How **product data** is structured in our solution  
+- How **locales, families, channels, variants, and SharePoint** fit together  
+- Where the **AL extension code** lives and how translation works today  
+- What is **planned next** (including SharePoint document translation)
 
-| Data type | Example |
+After reading this document, a developer should be able to open Business Central, understand the Item Card ecosystem, and start working on the `PIM-Locale` extension without prior PIM experience.
+
+---
+
+## 2. Executive summary
+
+| Question | Answer |
+|----------|--------|
+| What is PIM? | Software to manage rich product content: descriptions, attributes, images, documents, and languages for multiple sales channels. |
+| What is Business Central? | Microsoft ERP for finance, inventory, sales, purchasing, and operations. |
+| Are they the same? | **No.** BC runs the business. PIM enriches product content. |
+| What are we building? | A **PIM capability inside BC** — not a separate PIM database. |
+| What is the main source? | **Business Central Item** and ZVG custom tables (Extended Text, families, SharePoint links). |
+| How do languages work? | **Locales** (EN, DE, CH) with AI translation via **Azure Translator**. |
+| Where is Channel stored? | Inside **Extended Text** (custom table), not as a separate synced master field. |
+
+**Design principle:** One product master in BC. Locale-specific overlays for text. Families and SharePoint for shared group content. Channels captured in Extended Text per item/language.
+
+---
+
+## 3. What is PIM?
+
+**PIM (Product Information Management)** centralises everything a customer sees about a product **before** they buy it.
+
+| PIM manages | Examples |
+|-------------|----------|
+| Descriptions | Short name, long description, marketing copy |
+| Attributes | Colour, material, certifications, size |
+| Media | Pictures, videos, PDF datasheets |
+| Languages | English, German, Swiss German per market |
+| Channels | Web shop, B2B portal, marketplace, print catalog |
+| Relationships | Product families, related items, variants |
+
+PIM does **not** typically own stock levels, purchase prices, or general ledger posting — that is ERP territory.
+
+---
+
+## 4. What is Business Central?
+
+**Microsoft Dynamics 365 Business Central (BC)** is the ERP used by ZVG. Native BC product features include:
+
+| BC capability | Role |
+|---------------|------|
+| **Item** | SKU / product master |
+| **Item Category** | Product categorisation |
+| **Item Unit of Measure (UOM)** | How the item is sold, stocked, and priced |
+| **Item Variant** | Size, colour, or other variant dimensions |
+| **Item Attributes** | Flexible attribute values on items |
+| **Item Picture** | Product imagery on the Item Card |
+| **Inventory & sales** | Stock, orders, invoicing |
+
+BC is strong at operations. It is **not** a full multilingual PIM out of the box. Our extension adds that layer.
+
+---
+
+## 5. PIM vs Business Central
+
+| Dimension | Standalone PIM (e.g. Akeneo) | Business Central (ERP) | Our BC + PIM extension |
+|-----------|------------------------------|------------------------|-------------------------|
+| Master record | Separate product catalog | Item table | **Same Item table** |
+| Languages | Native locales | Limited | **PIM Locale tables** |
+| Channels | First-class channel objects | Not native | **Stored in Extended Text** |
+| Families | Product models / families | Custom ZVG tables | **Product Family + Groups** |
+| Documents | DAM / media library | SharePoint attachments | **SharePoint + future translation** |
+| Translation | Built-in connectors | None | **Azure Translator** |
+| Stock & pricing | Synced from ERP | Native | **Native — no sync needed** |
+
+**Analogy:** Business Central is the warehouse and accounting office. PIM is the product catalogue, brochure, and website content. We built the catalogue **inside** the same building.
+
+---
+
+## 6. Solution strategy: BC as the PIM backbone
+
+### 6.1 Core decisions
+
+1. **Business Central Item is the single product master** — no duplicate SKU in an external PIM.  
+2. **Locale-specific text** is stored in PIM overlay tables, not by overwriting English source data.  
+3. **Channel** (sales/distribution channel) is captured in **Extended Text**, not as a separate synchronised master entity.  
+4. **Product families** group items; family members can **share SharePoint notes and links**.  
+5. **Variants** carry variant-level attributes tied to the base item.  
+6. **SharePoint Attachments** hold supplementary files outside the core item blob fields.  
+7. **AI translation** (Azure Translator) fills target locales from the English source locale.
+
+### 6.2 High-level architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     MICROSOFT DYNAMICS 365 BUSINESS CENTRAL               │
+│                                                                          │
+│  ┌──────────────────── ERP CORE ────────────────────┐                     │
+│  │ Item │ Category │ UOM │ Variants │ Inventory │ Sales │ Finance       │ │
+│  └──────────────────────────────────────────────────┘                     │
+│                              │                                            │
+│  ┌──────────────── ZVG PRODUCT CONTENT LAYER ──────────────────────┐   │
+│  │ Extended Text (50116)  │ Channel, SEO, Description Text          │   │
+│  │ Product Family / Groups │ Related items, family structure         │   │
+│  │ Item Attributes        │ Colour, size, certifications             │   │
+│  │ Item Picture           │ Product imagery                          │   │
+│  │ SharePoint Attachments │ PDFs, datasheets, notes (per item/family)│   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              │                                            │
+│  ┌──────────────── PIM LOCALE EXTENSION (our AL code) ───────────────┐   │
+│  │ Locales (EN/DE/CH) │ AI Translation │ Locale field overlays       │   │
+│  │ Item Card UI        │ Extended Detail Card │ Marketing Text      │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────┘
+         │                    │                         │
+         ▼                    ▼                         ▼
+   Shopify / Web        Sales documents           SharePoint Online
+   (per channel)        (Offer Confirmation)       (attachments)
+```
+
+---
+
+## 7. System architecture
+
+### 7.1 Logical layers
+
+| Layer | Responsibility | Technology |
+|-------|----------------|------------|
+| **Presentation** | Item Card, Extended Detail Card, Marketing Text, family pages | BC Pages + PageExtensions |
+| **PIM services** | Locale session, translation orchestration, field apply/save | AL Codeunits |
+| **PIM persistence** | Locale definitions, translated field values, attributes | AL Tables |
+| **Product content** | Extended Text, families, attributes, pictures | ZVG custom + standard BC tables |
+| **External services** | Machine translation | Azure Translator API |
+| **Document storage** | Files, notes, shared family links | SharePoint Online |
+| **ERP core** | Item master, UOM, variants, stock, sales | Standard BC |
+
+### 7.2 Component diagram
+
+```
+                    ┌─────────────────┐
+                    │   Item Card     │
+                    │  (PageExt)      │
+                    └────────┬────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         ▼                   ▼                   ▼
+┌────────────────┐  ┌────────────────┐  ┌──────────────────┐
+│ PIM Locale     │  │ PIM Locale     │  │ PIM AI           │
+│ Session        │  │ Mgt.           │  │ Translator       │
+│ (active locale)│  │ apply/save     │  │ Azure API        │
+└────────────────┘  └───────┬────────┘  └──────────────────┘
+                            │
+         ┌──────────────────┼──────────────────┐
+         ▼                  ▼                  ▼
+┌────────────────┐ ┌──────────────┐ ┌───────────────────┐
+│ PIM Item       │ │ PIM Item     │ │ PIM Item Locale   │
+│ Locale Data    │ │ Locale Field │ │ Attribute         │
+└────────────────┘ └──────────────┘ └───────────────────┘
+                            │
+         ┌──────────────────┼──────────────────┐
+         ▼                  ▼                  ▼
+┌────────────────┐ ┌──────────────┐ ┌───────────────────┐
+│ Item (BC)      │ │ Extended Text│ │ Item Attributes   │
+│                │ │ (50116)      │ │ Item Picture      │
+└────────────────┘ └──────────────┘ └───────────────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ SharePoint       │
+                   │ Attachments      │
+                   └──────────────────┘
+```
+
+---
+
+## 8. Product data model — entities and fields
+
+This section defines **every major product concept** in our solution. A new developer should memorise this table first.
+
+### 8.1 Entity reference
+
+| Entity | What it is | Where stored | PIM / locale behaviour |
+|--------|------------|--------------|------------------------|
+| **Item** | Base product / SKU master | BC `Item` table | Description and text fields translated per locale |
+| **Category** | Product categorisation (hierarchy) | BC `Item Category` | Category **codes** are not translated; descriptions may be extended later |
+| **Item UOM** | Unit of measure (piece, roll, pallet) | BC `Item Unit of Measure` | UOM **codes** are operational — not translated |
+| **Variants** | Variant-level SKU (size, colour, etc.) tied to base item | BC `Item Variant` + variant attributes | Variant **attributes** (text) can be translated; codes are not |
+| **Extended Text** | Free-text / rich content: descriptions, SEO, **Channel** | ZVG table **50116** `Extended Text`, page **50189** Extended Detail Card | **Fully locale-aware**; Channel stored here |
+| **Channel** | Sales / distribution channel identifier | **Inside Extended Text** (`Channel Code` field) — **not** a separate synced master | Per item + language + channel row in Extended Text |
+| **Item Attributes** | Flexible attributes (Farbe, material, etc.) | BC `Item Attribute` + `Item Attribute Value Mapping` | Text attribute **values** translated per locale |
+| **Pictures** | Product imagery | BC `Item Picture` | Binary media — not text-translated; may have locale-specific images in future |
+| **SharePoint Attachments** | Supplementary files (PDF, Word, datasheets) | SharePoint via BC integration | **Outside** core item record; **document translation planned** |
+| **Locales** | Language/market-specific data overlay | PIM tables (`PIM Locale`, `PIM Item Locale Data`, etc.) | EN = source; DE, CH = targets |
+| **Product Family** | Groups related products under a family code | ZVG custom tables | Family-level metadata; members share structure |
+| **Product Family Groups** | Higher-level grouping of families | ZVG custom tables | Organisational hierarchy for catalogues |
+| **Related Items** | Cross-sell, upsell, spare parts links | ZVG / BC item references | Links by Item No.; content on each item still locale-specific |
+
+### 8.2 Extended Text — the rich content hub
+
+**Extended Text** (table 50116) is the most important custom table for PIM content. Each record is keyed by:
+
+| Key field | Purpose |
 |-----------|---------|
-| SKU / Item No. | `000000385` |
-| Description (EN) | ClaraClean® Brillant Eco – ecological rinse aid |
-| Description (DE) | ClaraClean® Brillant Eco – ökologischer Glanztrockner |
-| Marketing text | Long sales copy for website |
-| SEO keyword | "Glass cleaning rinse aid" |
-| Attributes | Color, product family, certifications |
-| Images | Product photos in SharePoint |
-| Documents | PDF datasheets |
+| Table Name | Links to `Item` |
+| No. (Item No.) | Which product |
+| Language Code | e.g. CHS, ENU (BC language, separate from PIM locale overlay) |
+| Channel Code | **Sales / distribution channel** — see below |
+| Item Variant Code | Optional variant scope |
 
-**PIM owns the rich content.** The ERP still owns stock, price, and orders.
+**Content fields on Extended Detail Card:**
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| Description Text | Blob | Long product description |
+| SEO Keyword | Text | Search optimisation |
+| SEO Description | Text | Meta description |
+| Special Instruction Text | Blob | Handling / usage instructions |
+| Alternative No. | Text | Cross-reference number |
+
+### 8.3 Channel — important design rule
+
+> **Channel is NOT maintained as an independent master field that syncs from an external system.**
+
+Instead:
+
+- **Channel** represents a sales or distribution channel (e.g. web shop, B2B portal, marketplace).  
+- It is stored **within Extended Text** using the **Channel Code** field.  
+- Each combination of **Item + Language Code + Channel Code** (+ optional variant) can have its own Extended Text row.  
+- This allows **channel-specific descriptions and SEO** without a separate channel sync engine.
+
+```
+Item 000000385
+ ├── Extended Text row: Language=ENU, Channel=WEB   → English web copy
+ ├── Extended Text row: Language=ENU, Channel=B2B   → English B2B copy
+ └── Extended Text row: Language=DEU, Channel=WEB   → German web copy (via PIM locale)
+```
+
+When the user switches PIM locale to **Germany**, the Extended Detail Card shows the **German overlay** for the active Extended Text record.
+
+### 8.4 Variants
+
+| Concept | Detail |
+|---------|--------|
+| **Base item** | Master SKU (e.g. `000000385`) |
+| **Item Variant** | Sub-SKU for size, colour, packaging (e.g. `BLUE-L`) |
+| **Variant attributes** | Attributes tied to the variant (size, colour) |
+| **PIM rule** | Variant codes and numeric values are **not translated**. Text attribute values **are translated** when locale is active. |
+
+### 8.5 Category and UOM
+
+| Entity | Translated? | Notes |
+|--------|-------------|-------|
+| **Item Category Code** | No | Operational code (`CCC-01`) — stays as-is |
+| **Category description** | Future | May add locale overlay if needed |
+| **Item UOM Code** | No | `ROLL`, `PCS` — operational |
+| **UOM description** | Future | Standard BC unit names |
+
+### 8.6 Pictures
+
+| Aspect | Detail |
+|--------|--------|
+| Storage | BC `Item Picture` table (binary) |
+| UI | Item Card picture factbox |
+| Locale | Currently **one picture set per item**; locale-specific imagery is a future enhancement |
+| vs SharePoint | Pictures are **in BC**; SharePoint holds **documents** (PDFs, spec sheets) |
+
+### 8.7 Locales
+
+| Locale code | Market | BC language | Azure tag | Role |
+|-------------|--------|-------------|-----------|------|
+| **EN** | English | ENU | `en` | **Source locale** — original content |
+| **DE** | Germany | DEU | `de` | Target — AI translation |
+| **CH** | Swiss German | DES | `de` | Target — AI translation |
+
+Locale data is stored in PIM tables and **applied on screen** when the user selects a locale on the Item Card. English source data in BC is **never overwritten**.
 
 ---
 
-## 3. What is Business Central?
+## 9. Product families, related items, and shared content
 
-**Microsoft Dynamics 365 Business Central (BC)** is an ERP. It is strong at:
+### 9.1 Product Family and Product Family Groups
 
-- Items (SKU master)
-- Inventory and warehouses
-- Sales orders and invoices
-- Purchase and vendors
-- Finance and posting
-- Basic item fields: Description, Unit of Measure, GTIN, categories
+```
+Product Family Group (e.g. "Cleaning Products")
+ └── Product Family (e.g. "CC -03" ClaraClean line)
+      ├── Item 000000385  ClaraClean Brillant Eco
+      ├── Item 000000386  ClaraClean variant B
+      └── Item 000000387  Related accessory
+```
 
-BC is **not** designed as a full PIM out of the box. It has:
+| Concept | Purpose |
+|---------|---------|
+| **Product Family Code** | Groups items in the same product line (visible on Item Card) |
+| **Product Family Group** | Higher-level catalogue grouping for reporting and navigation |
+| **Family members** | All items sharing a family code |
 
-- One main **Description** per item (limited locale support natively)
-- **Item Attributes** (good, but not a full Akeneo-style experience)
-- **Marketing Text** (newer versions, Entity Text)
-- **Extended Text** (notes, not full multilingual PIM)
+### 9.2 Shared SharePoint notes and links
 
-So customers often add PIM **on top of** BC or **inside** BC via customization.
+Family members can **share** supplementary content:
+
+| Shared at family level | Stored in |
+|------------------------|-----------|
+| Common datasheets | SharePoint folder / links shared across family |
+| Compliance documents | SharePoint |
+| Marketing notes | SharePoint notes or links |
+
+**Design intent:** Avoid uploading the same PDF to every item in a family. Maintain shared links at family or group level; items **reference** or **inherit** access where the ZVG extension defines it.
+
+> **Developer note:** Implement family-level SharePoint inheritance according to ZVG table design. The PIM locale extension today focuses on **item-level** text. Family-level sharing is part of the broader ZVG SharePoint integration.
+
+### 9.3 Related Items
+
+| Type | Example |
+|------|---------|
+| Cross-sell | Detergent + rinse aid |
+| Accessory | Machine + spare part |
+| Substitute | Alternative SKU |
+
+Related items are **links between Item records**. Each linked item maintains its **own locale content**. Translation does not automatically copy between related items.
 
 ---
 
-## 4. PIM vs Business Central — key differences
+## 10. Locales and translation
 
-| Topic | PIM (e.g. Akeneo) | Business Central (ERP) |
-|-------|-------------------|-------------------------|
-| **Primary goal** | Product content & syndication | Business operations & finance |
-| **Master data** | Marketing-ready product content | Operational item master |
-| **Languages** | Core feature (locales, channels) | Limited; needs extension |
-| **Attributes** | Flexible families, schemas | Item Attributes (simpler) |
-| **Workflow** | Enrich → review → publish | Create item → sell → ship |
-| **Channels** | Export to web, marketplaces | Sales documents, API, integrations |
-| **Images/docs** | DAM, media library | SharePoint attachments, files |
-| **Who uses it** | Marketing, product managers | Finance, sales, warehouse |
-| **Stock & price** | Usually synced from ERP | Native strength |
+### 10.1 User workflow
 
-### Simple analogy
+```
+1. User opens Item Card (e.g. 000000385)
+2. Processing → Locales → Germany
+3. System calls Azure Translator for all configured text fields
+4. Translated values stored in PIM tables
+5. Item Card, Extended Detail Card, and Marketing Text show German content
+6. Processing → Locales → English restores source view
+```
 
-- **Business Central** = the warehouse + cash register + accounting  
-- **PIM** = the product catalog + brochure + website content  
+### 10.2 What is translated
 
-They work together. The **Item No.** links them.
+| Source | Stored in | Displayed on |
+|--------|-----------|--------------|
+| Item.Description, Description 2 | PIM Item Locale Field | Item Card |
+| Marketing Text | PIM Item Locale Data | Edit Marketing Text page |
+| Extended Text fields (50116) | PIM Item Locale Field (+ Long Value blob) | Extended Detail Card |
+| Item Attribute values (text) | PIM Item Locale Attribute | Item Attributes factbox |
+| Custom tables (via setup) | PIM Item Locale Field | Configured pages |
+
+### 10.3 What is NOT translated
+
+| Data | Reason |
+|------|--------|
+| Item No., GTIN, barcodes | Identifiers |
+| Category codes, UOM codes | Operational codes |
+| Channel codes | Operational identifiers |
+| Numeric attribute values | Not language content |
+| Prices, quantities | ERP transactional data |
+| Pictures (binary) | Media — separate workflow |
+
+### 10.4 Translation architecture
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│ Source text │────▶│ PIM AI Translator │────▶│ Azure Translator API │
+│ (EN locale) │     │ (codeunit)        │     │ (eastasia region)    │
+└─────────────┘     └────────┬─────────┘     └─────────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │ PIM Item Locale Data         │
+              │ PIM Item Locale Field        │
+              │ PIM Item Locale Attribute    │
+              └──────────────────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │ Apply to UI (RecordRef)      │
+              │ Item Card / Extended Detail  │
+              └──────────────────────────────┘
+```
+
+### 10.5 Azure configuration
+
+| Setting | Value |
+|---------|-------|
+| Resource | MSBCTranslator |
+| API | Text Translation |
+| Endpoint | `https://api.cognitive.microsofttranslator.com` |
+| Region | `eastasia` |
+| BC setup page | PIM AI Setup |
+| Prerequisite | `allowHttpClientRequests: true` in app.json |
 
 ---
 
-## 5. Our strategy: Business Central as the main source (BC PIM)
+## 11. SharePoint attachments and documents (future)
 
-We are **not** replacing Business Central with a separate PIM tool as the master system.
+### 11.1 Current state
 
-We are building:
+| Aspect | Status |
+|--------|--------|
+| SharePoint Attachments on Item Card | **Exists** in ZVG BC |
+| File storage | **Outside** core Item record (SharePoint Online) |
+| Text field translation | **Done** (PIM Locale extension) |
+| **Document translation** (PDF, Word) | **Planned — not yet implemented** |
 
-> **A PIM layer inside Business Central**, where BC remains the single source of truth for items, and we add locale-aware content, translation, and extended product data.
+### 11.2 Planned document translation flow
 
-### Why this approach?
-
-| Benefit | Explanation |
-|---------|-------------|
-| **One system** | Users stay on Item Card; no duplicate item masters |
-| **No heavy sync** | No nightly Akeneo ↔ BC sync jobs for 50+ fields |
-| **Lower cost** | No separate PIM license for basic needs |
-| **Fits ZVG** | Custom Extended Details, SharePoint, Shopify already in BC |
-
-### What we add on top of standard BC
+SharePoint files cannot use the Text Translation API. They require **Azure Document Translation**:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    BUSINESS CENTRAL (ERP)                    │
-│  Item Card │ Inventory │ Sales │ Purchase │ Finance          │
-├─────────────────────────────────────────────────────────────┤
-│              PIM LAYER (our custom extension)                │
-│  • Locales (EN, DE, CH)                                      │
-│  • AI Translation (Azure Translator)                         │
-│  • Translated fields on Item Card                            │
-│  • Extended Detail Card (SEO, description text)              │
-│  • Marketing Text per locale                                 │
-│  • Item Attributes per locale                                │
-│  • Locale table setup for custom tables                      │
-│  • (Future) SharePoint document translation                  │
-└─────────────────────────────────────────────────────────────┘
-         │                              │
-         ▼                              ▼
-    Shopify / Web                 Sales PDF / Print
+SharePoint file (PDF/DOCX)
+        │
+        ▼ Download
+Azure Blob Storage (source container)
+        │
+        ▼ Document Translation API
+Azure Blob Storage (target container, e.g. /de/)
+        │
+        ▼ Upload
+SharePoint (translated file, e.g. datasheet_DE.pdf)
 ```
+
+| Requirement | Detail |
+|-------------|--------|
+| Azure Storage Account | Source + target blob containers |
+| Document endpoint | `https://msbctranslator.cognitiveservices.azure.com/` |
+| BC action (future) | e.g. "Translate SharePoint Documents to German" on Item Card |
+| Family sharing | Translated family documents available to all family members |
+
+### 11.3 SharePoint vs Pictures vs Extended Text
+
+| Content type | Location | Translation approach |
+|--------------|----------|----------------------|
+| Short / long text | Extended Text, Item fields | **Text API** (live today) |
+| Product photos | Item Picture | Locale-specific images (future) |
+| PDF datasheets | SharePoint Attachments | **Document API** (planned) |
+| Family shared notes | SharePoint links | Document or link per locale (planned) |
 
 ---
 
-## 6. How our PIM works (functional overview)
+## 12. Technical implementation (AL extension)
 
-### 6.1 Locales
-
-We use an **Akeneo-style locale** model:
-
-| Locale code | Name | BC language | Azure Translator tag |
-|-------------|------|-------------|----------------------|
-| EN | English | ENU | en |
-| DE | Germany | DEU | de |
-| CH | Swiss German | DES | de |
-
-- **EN** = source locale (original content)
-- **DE / CH** = target locales (translated content)
-
-User flow on **Item Card**:
-
-1. Open item
-2. **Processing → Locales → Germany**
-3. System translates all configured text and shows German on the page
-4. Open **Extended Details** → German SEO and description
-5. Open **Marketing Text** action → German marketing copy
-
-### 6.2 What gets translated
-
-| Data area | Where it lives | Where user sees translation |
-|-----------|----------------|----------------------------|
-| Item fields | Item table | Item Card (Description, etc.) |
-| Marketing text | PIM Item Locale Data + Entity Text | Marketing Text action |
-| Extended details | Table 50116 Extended Text | Extended Detail Card |
-| Item attributes | PIM Item Locale Attribute | Item Card / attributes |
-| Custom tables | PIM Locale Table Setup | Configured pages |
-
-**Not translated:** codes, numbers, GTIN, prices, quantities.
-
-### 6.3 AI translation
-
-- **Provider:** Azure Translator (resource: MSBCTranslator, region: eastasia)
-- **Config page:** PIM AI Setup
-- **Flow:** Source locale text → API → stored in PIM tables → shown on UI
-
----
-
-## 7. Technical architecture for developers
-
-### 7.1 Project structure (ZVG-Nonpa)
-
-Files from `PIM-Locale/src/` are merged into the main extension:
+### 12.1 Repository structure
 
 ```
-ZVG-Nonpa/src/
-├── table/          ← PIM data tables
-├── page/           ← Setup & list pages
-├── pageextension/  ← Item Card, Extended Detail Card, Marketing Text
-├── codeunit/       ← Business logic
-└── enum/           ← Status, AI provider
+PIM-Locale/
+├── PIM-Developer-Guide.md      ← This document
+├── README-INSTALL.txt          ← Install steps
+├── app.json
+└── src/
+    ├── table/                  ← PIM data tables
+    ├── page/                   ← Admin & setup pages
+    ├── pageextension/          ← Item Card, Extended Detail, Marketing Text
+    ├── codeunit/               ← Business logic
+    └── enum/                   ← Status, AI provider
 ```
 
-**Do not** copy `PIM-Locale` as a subfolder. Merge files into existing `src/` folders.
+Merge `src/` contents into `ZVG-Nonpa/src/` — **do not** nest as a sub-app.
 
-### 7.2 Core data model
+### 12.2 PIM tables
 
-```
-PIM Locale
-    └── Defines EN, DE, CH (language codes, AI tags)
+| Table | Purpose |
+|-------|---------|
+| `PIM Locale` | Locale definitions (EN, DE, CH) |
+| `PIM Item Locale Data` | Header per item + locale (description, marketing text, status) |
+| `PIM Item Locale Field` | Field-level translated values; `Long Value` blob for large text |
+| `PIM Item Locale Attribute` | Translated attribute values |
+| `PIM Locale Table Setup` | Register tables for translation (50116 Extended Text) |
+| `PIM AI Setup` | Azure Translator configuration |
 
-PIM Item Locale Data (header per item + locale)
-    └── Description, Marketing Text, Extended Description, status
-
-PIM Item Locale Field (field-level storage)
-    └── Item No. + Locale + Table No. + Field No. + Value
-    └── Supports long/blob text via Long Value blob field
-
-PIM Item Locale Attribute
-    └── Translated attribute values per locale
-
-PIM Locale Table Setup
-    └── Register custom tables (e.g. Extended Text 50116) for translation
-
-PIM AI Setup
-    └── Azure Translator endpoint, key, region
-```
-
-### 7.3 Core codeunits
+### 12.3 Codeunits
 
 | Codeunit | Responsibility |
 |----------|----------------|
-| **PIM Locale Session** | SingleInstance: remembers active locale (EN/DE/CH) per user session |
-| **PIM Locale Mgt.** | Locale logic, translate all fields, apply locale to records, blob handling |
-| **PIM AI Translator** | Calls Azure Translator / Claude / Azure OpenAI |
-| **PIM Locales Install** | Creates default locales on install |
+| `PIM Locale Session` | SingleInstance — tracks active locale per user session |
+| `PIM Locale Mgt.` | Translate, apply, save locale fields; blob handling; table 50116 setup |
+| `PIM AI Translator` | Azure Translator / Claude / Azure OpenAI integration |
+| `PIM Locales Install` | Default locales and setup on install |
 
-### 7.4 Key pages & extensions
+### 12.4 Page extensions
 
-| Object | Purpose |
-|--------|---------|
-| PIM Locales | Admin: manage locale list |
-| PIM AI Setup | Azure API configuration |
-| PIM Locale Table Setup | Register Extended Details table |
-| PIM Item Card Locales (PageExt) | Locales menu on Item Card |
-| PIM Extended Detail Card Locales | Show translated extended details |
-| PIM Edit Marketing Text Locales | Show translated marketing text |
+| Extension | Extends | Purpose |
+|-----------|---------|---------|
+| `PIM Item Card Locales` | Item Card | Locales menu; apply translated item fields |
+| `PIM Extended Detail Card Locales` | Extended Detail Card (50189) | Show translated Extended Text incl. Channel row |
+| `PIM Edit Marketing Text Locales` | Edit Marketing Text | Show translated marketing copy |
 
-### 7.5 Object ID ranges
+### 12.5 Key ZVG object IDs
 
-Starter repo uses **50100–50149**.  
-ZVG production may use **503xx / 506xx** — developer must align IDs with `app.json` and avoid conflicts.
+| Object | ID | Name |
+|--------|-----|------|
+| Table | 50116 | Extended Text |
+| Page | 50189 | Extended Detail Card |
+| Link field | 2 | No. (Item No.) |
+| PIM starter IDs | 50100–50149 | May differ in production (503xx / 506xx) |
 
-### 7.6 app.json requirements
+### 12.6 app.json requirements
 
 ```json
 {
@@ -260,174 +540,178 @@ ZVG production may use **503xx / 506xx** — developer must align IDs with `app.
 }
 ```
 
-In BC: **Extension Management → Allow HTTPClient Requests = ON**
+BC: **Extension Management → Allow HTTPClient Requests = ON**
 
 ---
 
-## 8. Standard BC vs our PIM — field mapping
+## 13. Data flow diagrams
 
-| BC standard | Our PIM enhancement |
-|-------------|---------------------|
-| Item.Description | Translated per locale; shown on Item Card when locale active |
-| Item Attributes | Values translated; stored in PIM Item Locale Attribute |
-| Marketing Text (Entity Text) | Translated; shown in Edit Marketing Text page |
-| Extended Text (custom 50116) | Description Text (blob), SEO fields; Extended Detail Card |
-| SharePoint attachments | **Not yet** — future Document Translation API |
+### 13.1 Item enrichment flow (end-to-end)
 
----
+```
+┌──────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│ Create   │───▶│ Assign      │───▶│ Fill Extended│───▶│ Add pictures│
+│ Item     │    │ Category,   │    │ Text + Channel│   │ + SharePoint│
+│          │    │ UOM, Family │    │ + attributes │    │ attachments │
+└──────────┘    └─────────────┘    └──────────────┘    └──────┬──────┘
+                                                              │
+                                                              ▼
+                                                    ┌─────────────────┐
+                                                    │ Locales → DE/CH │
+                                                    │ AI translation  │
+                                                    └────────┬────────┘
+                                                             │
+                              ┌──────────────────────────────┼──────────────────┐
+                              ▼                              ▼                  ▼
+                        Item Card (DE)              Extended Detail (DE)   Marketing Text (DE)
+                              │                              │                  │
+                              └──────────────────────────────┴──────────────────┘
+                                                             │
+                                                             ▼
+                                                    Shopify / Sales docs / Web
+```
 
-## 9. Comparison with standalone PIM (e.g. Akeneo)
+### 13.2 Channel + locale matrix (conceptual)
 
-| Feature | Akeneo PIM | Our BC PIM |
-|---------|------------|------------|
-| Item master | Separate catalog | BC Item table |
-| Locales | Native | PIM Locale table |
-| Translation | Built-in / plugins | Azure Translator |
-| Workflows | Review, publish channels | Translation status enum (Draft, AI Generated, Reviewed) |
-| Syndication | Connectors to Shopify, etc. | BC integrations (Shopify app, etc.) |
-| Complexity | High; second system | Medium; one BC extension |
-| Best for | Large catalogs, many channels | BC-centric companies (like ZVG) |
-
-We took **Akeneo concepts** (locales, locale-specific fields) and implemented them **inside BC**.
-
----
-
-## 10. Developer onboarding checklist
-
-### Week 1 — Understand the domain
-
-- [ ] Read this document
-- [ ] Open BC and find **Item Card** for item `000000385`
-- [ ] Try **Processing → Locales → Germany**
-- [ ] Open **Extended Details** and **Marketing Text**
-- [ ] Read `PIM-Locale/README-INSTALL.txt`
-
-### Week 2 — Understand the code
-
-- [ ] Clone repo: `https://github.com/ftwo-lab/Testing-/tree/main/PIM-Locale`
-- [ ] Trace flow: `PIMItemCardLocales.PageExt.al` → `PIMAITranslator` → `PIMLocaleMgt`
-- [ ] Open tables in BC: PIM Locales, PIM AI Setup, PIM Locale Table Setup
-- [ ] Publish extension locally (F5)
-
-### Week 3 — Extend
-
-- [ ] Add a new locale (e.g. FR)
-- [ ] Register another custom table in PIM Locale Table Setup
-- [ ] Fix/report bugs with blob fields (Description Text)
+| Item | Language Code | Channel Code | PIM Locale | Content |
+|------|---------------|--------------|------------|---------|
+| 000000385 | ENU | WEB | EN (source) | English web description |
+| 000000385 | ENU | B2B | EN (source) | English B2B description |
+| 000000385 | ENU | WEB | DE (overlay) | German web description (translated) |
+| 000000385 | CHS | WEB | CH (overlay) | Swiss German web description |
 
 ---
 
-## 11. Environment setup (developer)
+## 14. Developer environment setup
 
-### Tools
+### 14.1 Prerequisites
 
-- Visual Studio Code
-- AL Language extension
-- Business Central sandbox or Docker container
-- Git
+| Tool | Purpose |
+|------|---------|
+| Visual Studio Code | AL development |
+| AL Language extension | Compile and publish |
+| Business Central sandbox | Testing |
+| Git | Source control |
+| Azure Portal access | Translator API key (for translation testing) |
 
-### Azure (for translation)
+### 14.2 First-time setup
 
-| Setting | Value |
-|---------|-------|
-| Resource | MSBCTranslator |
-| Type | Text Translation |
-| Region | eastasia |
-| Endpoint | `https://api.cognitive.microsofttranslator.com` |
-| API Key | From Azure Portal → Keys and Endpoint |
+1. Clone `https://github.com/ftwo-lab/Testing-`  
+2. Copy `PIM-Locale/src/*` into `ZVG-Nonpa/src/`  
+3. Align object IDs with `app.json`  
+4. Publish extension (F5)  
+5. In BC: **PIM Locales** → Create Default Locales  
+6. In BC: **PIM AI Setup** → Enable, Azure Translator, key, region `eastasia`  
+7. Test item `000000385`: Locales → Germany → Extended Details  
 
-### BC setup after publish
+### 14.3 Recommended learning path for a new developer
 
-1. Search **PIM Locales** → Create Default Locales  
-2. Search **PIM AI Setup** → Enable, Azure Translator, key, region  
-3. Extension Management → Allow HTTPClient Requests  
-4. Test on one item  
+| Step | Action | Outcome |
+|------|--------|---------|
+| 1 | Read Sections 2, 6, 8, 10 of this document | Understand domain model |
+| 2 | Open Item `000000385` in BC | See real data |
+| 3 | Switch Locales → Germany | See translation in action |
+| 4 | Open Extended Detail Card | See Channel + SEO + Description Text |
+| 5 | Clone `PIM-Locale` and trace `PIMLocaleMgt.Codeunit.al` | Understand code flow |
+| 6 | Publish to sandbox | Confirm you can compile |
 
 ---
 
-## 12. Roadmap (what exists vs planned)
+## 15. Feature status and roadmap
 
 | Feature | Status |
 |---------|--------|
-| Locales EN / DE / CH | ✅ Done |
-| AI translation (Azure Translator) | ✅ Done |
-| Item Card field translation | ✅ Done |
-| Extended Detail Card translation | ✅ Done |
-| Marketing Text translation | ✅ Done |
-| Item Attributes translation | ✅ Done |
-| Custom table setup | ✅ Done |
-| Blob field (Description Text) | ✅ Done (with Long Value storage) |
-| SharePoint document translation | 🔲 Planned |
-| Publish workflow (review/approve) | 🔲 Partial (status enum exists) |
-| Shopify sync per locale | 🔲 Depends on Shopify connector |
-| Channel-specific content | 🔲 Future |
+| Locales EN / DE / CH | ✅ Implemented |
+| AI text translation (Azure Translator) | ✅ Implemented |
+| Item Card field translation | ✅ Implemented |
+| Extended Detail Card (incl. blob Description Text) | ✅ Implemented |
+| Marketing Text page translation | ✅ Implemented |
+| Item Attributes (text values) | ✅ Implemented |
+| PIM Locale Table Setup (custom tables) | ✅ Implemented |
+| Channel in Extended Text | ✅ Data model exists; locale overlay applies |
+| Product Family / Groups | ✅ ZVG tables; locale on family metadata — future |
+| Related items | ✅ Links exist; per-item locale |
+| SharePoint Attachments | ✅ Storage exists |
+| **SharePoint document translation** | 🔲 **Planned** |
+| Locale-specific product pictures | 🔲 Planned |
+| Publish / review workflow | 🔲 Partial (translation status enum) |
+| Shopify per-locale sync | 🔲 Depends on Shopify connector |
 
 ---
 
-## 13. Glossary for new developers
+## 16. Glossary
 
-| Term | Meaning |
-|------|---------|
+| Term | Definition |
+|------|------------|
 | **PIM** | Product Information Management |
-| **ERP** | Enterprise Resource Planning (BC) |
-| **Locale** | Language/market variant (EN, DE, CH) |
-| **Source locale** | Original language content is written in |
-| **Target locale** | Language we translate into |
-| **Item** | Product SKU in BC |
-| **Extension** | AL code published into BC (our app) |
-| **PageExt** | Extends standard BC page (e.g. Item Card) |
-| **RDLC** | Report layout format (sales PDFs) |
-| **Entity Text** | BC feature for Marketing Text |
-| **Blob field** | Large text stored as binary (Description Text) |
-| **Syndication** | Sending product data to external channels |
+| **ERP** | Enterprise Resource Planning — Business Central |
+| **Item** | Product SKU — the master record in BC |
+| **Locale** | Language/market overlay (EN, DE, CH) |
+| **Source locale** | Original language (English) — never overwritten |
+| **Target locale** | Translated language (German, Swiss German) |
+| **Channel** | Sales/distribution channel — stored in Extended Text `Channel Code` |
+| **Extended Text** | ZVG table 50116 — rich text, SEO, channel-specific content |
+| **Product Family** | Group of related items under one family code |
+| **Product Family Group** | Higher-level grouping of product families |
+| **Related Items** | Linked items (cross-sell, accessories) |
+| **Variant** | Item sub-SKU (size, colour) tied to base item |
+| **Item UOM** | Unit of measure (roll, piece, pallet) |
+| **Category** | Item categorisation code and hierarchy |
+| **Item Attributes** | Flexible name/value pairs on items |
+| **Pictures** | Product images on Item Card |
+| **SharePoint Attachments** | Files stored in SharePoint, linked from BC |
+| **PageExt** | AL page extension — extends standard BC pages |
+| **RecordRef** | AL variable for generic record access (used for blob fields) |
+| **Syndication** | Publishing product data to external channels |
 
 ---
 
-## 14. FAQ
+## 17. FAQ
 
-**Q: Is BC a PIM?**  
-A: No. BC is an ERP. We are **adding PIM capabilities** to BC.
+**Q: Is Business Central a PIM system?**  
+A: No. BC is an ERP. We add PIM capabilities through a custom AL extension.
 
-**Q: Why not use Akeneo?**  
-A: Cost, complexity, and duplicate item masters. ZVG wants BC as the hub.
+**Q: Where is the main source of product truth?**  
+A: The BC **Item** table and ZVG **Extended Text** table. PIM tables store locale overlays only.
 
-**Q: Where is the “main source”?**  
-A: **Business Central Item** + custom ZVG tables (Extended Text, etc.). PIM tables store **locale overlays**, not a second item master.
+**Q: Why is Channel inside Extended Text instead of its own table?**  
+A: Channel-specific copy (web vs B2B) naturally varies per item and language. Storing it in Extended Text avoids a separate sync layer and keeps channel content with the product description it belongs to.
 
-**Q: Does translation change the database for English?**  
-A: No. English stays in source fields. German is stored in PIM locale tables and shown when locale = DE.
+**Q: Do family members automatically share translated text?**  
+A: No. Family members share **SharePoint notes and links** at family level. Each item's text fields are still translated per item.
 
-**Q: What API do we use?**  
-A: Azure Translator Text API (not Document API for fields).
+**Q: Are variant codes translated?**  
+A: No. Variant codes and numeric values stay as-is. Text variant attributes can be translated.
+
+**Q: Does German translation overwrite English in the database?**  
+A: No. English remains in source fields. German is stored in PIM locale tables and shown when locale DE is active.
+
+**Q: How will SharePoint PDFs be translated?**  
+A: Future feature using Azure **Document Translation** API — separate from text field translation.
 
 ---
 
-## 15. Contact & repository
+## 18. Repository and key object references
 
 | Resource | Location |
 |----------|----------|
-| AL source code | `PIM-Locale/` in GitHub repo `ftwo-lab/Testing-` |
-| Install steps | `PIM-Locale/README-INSTALL.txt` |
-| BC app name | ICS Master by ZVG (customer environment) |
-| Custom Extended Details | Table **50116** Extended Text, Page **50189** Extended Detail Card |
+| AL source code | `PIM-Locale/` in `ftwo-lab/Testing-` |
+| Install guide | `PIM-Locale/README-INSTALL.txt` |
+| This handbook | `PIM-Locale/PIM-Developer-Guide.md` |
+| BC extension name | ICS Master by ZVG |
+| Extended Text table | 50116 |
+| Extended Detail Card page | 50189 |
+| Azure Translator resource | MSBCTranslator (eastasia) |
 
 ---
 
-## 16. One-page summary for the third-party developer
+## Document control
 
-**Project:** Build a PIM-style product content system **inside** Microsoft Dynamics 365 Business Central for ZVG.
-
-**You are not building a separate web app.** You are extending BC with AL code.
-
-**Main ideas:**
-1. BC Item is the master product record.  
-2. Locales (EN, DE, CH) hold translated content.  
-3. Azure Translator fills target locales from English.  
-4. Users switch locale on Item Card and see translated content in place.  
-5. Extended Details and Marketing Text have their own page extensions.  
-
-**Start here:** Read sections 1–7, clone `PIM-Locale`, publish to a sandbox, translate item `000000385` to German.
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | Aug 2026 | Initial developer guide |
+| 2.0 | Aug 2026 | Professional architecture; product model; families; channel in Extended Text; SharePoint future; removed weekly progress |
 
 ---
 
-*Document prepared for handoff to external development partner. Update as features are added.*
+*Prepared for ZVG / third-party developer handoff. Business Central remains the main source. PIM locale extension enriches product content for multi-market, multi-channel distribution.*
