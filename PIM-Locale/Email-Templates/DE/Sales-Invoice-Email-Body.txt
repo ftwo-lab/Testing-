@@ -1,0 +1,22 @@
+Betreff-Vorschlag: Rechnung %1 — ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+anbei erhalten Sie die Rechnung %1 vom %2 über den Betrag von %3.
+
+Der Zahlungstermin ist der %4. Falls Sie bereits bezahlt haben, betrachten Sie diese E-Mail bitte als gegenstandslos.
+
+Bei Fragen zu dieser Rechnung kontaktieren Sie uns unter accounts@zvg.com oder sales@zvg.com.
+
+Mit freundlichen Grüssen
+Ihr ZVG Team
+
+---
+Felder in Word (XML Mapping Pane):
+  %1 = Belegnr. (Rechnungsnr.)
+  %2 = Belegdatum
+  %3 = Betrag inkl. MwSt.
+  %4 = Fälligkeitsdatum
+  Kundenname = Rechnung an Name

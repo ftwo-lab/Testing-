@@ -1,0 +1,20 @@
+Betreff-Vorschlag: Bestellung %1 — ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+anbei erhalten Sie unsere Bestellung %1 vom %2.
+
+Bitte bestätigen Sie den Erhalt dieser Bestellung und teilen Sie uns den voraussichtlichen Liefertermin mit. Bei Abweichungen kontaktieren Sie uns bitte umgehend unter purchasing@zvg.com.
+
+Vielen Dank für Ihre Zusammenarbeit.
+
+Mit freundlichen Grüssen
+ZVG Einkauf
+
+---
+Felder in Word (XML Mapping Pane):
+  %1 = Belegnr. (Bestellnr.)
+  %2 = Belegdatum
+  Kreditor = Eink. von Name

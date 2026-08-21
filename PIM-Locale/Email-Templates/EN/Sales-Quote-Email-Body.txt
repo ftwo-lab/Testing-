@@ -1,0 +1,23 @@
+Subject line suggestion: Sales Quote %1 — ZVG
+
+---
+
+Dear Customer,
+
+Thank you for your interest in our products.
+
+Please find attached our sales quote %1 dated %2.
+
+This quote is valid until %3. If you would like to proceed or have any questions about pricing, delivery, or product specifications, please contact us at sales@zvg.com or reply to this email.
+
+We look forward to hearing from you.
+
+Kind regards,
+ZVG Team
+
+---
+Merge fields to add in Word (XML Mapping Pane):
+  %1 = Document No. (Quote No.)
+  %2 = Document Date
+  %3 = Quote Valid Until Date (if available on report dataset)
+  Customer Name = Bill-to Customer Name

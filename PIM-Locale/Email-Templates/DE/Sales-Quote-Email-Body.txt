@@ -1,0 +1,23 @@
+Betreff-Vorschlag: Angebot %1 — ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihr Interesse an unseren Produkten.
+
+Anbei erhalten Sie unser Angebot %1 vom %2.
+
+Dieses Angebot ist gültig bis %3. Bei Fragen zu Preisen, Lieferung oder Produktspezifikationen kontaktieren Sie uns bitte unter sales@zvg.com oder antworten Sie auf diese E-Mail.
+
+Wir freuen uns auf Ihre Rückmeldung.
+
+Mit freundlichen Grüssen
+Ihr ZVG Team
+
+---
+Felder in Word (XML Mapping Pane):
+  %1 = Belegnr. (Angebotsnr.)
+  %2 = Belegdatum
+  %3 = Gültig bis (falls im Report verfügbar)
+  Kundenname = Rechnung an Name

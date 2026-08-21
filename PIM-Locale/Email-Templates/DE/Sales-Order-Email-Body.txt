@@ -1,0 +1,20 @@
+Betreff-Vorschlag: Auftragsbestätigung %1 — ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihre Bestellung.
+
+Anbei erhalten Sie unsere Auftragsbestätigung %1 vom %2.
+
+Wir bearbeiten Ihre Bestellung und informieren Sie über den Versand. Bei Änderungswünschen oder Fragen erreichen Sie uns unter sales@zvg.com.
+
+Mit freundlichen Grüssen
+Ihr ZVG Team
+
+---
+Felder in Word (XML Mapping Pane):
+  %1 = Belegnr. (Auftragsnr.)
+  %2 = Belegdatum
+  Kundenname = Rechnung an Name

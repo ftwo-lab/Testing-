@@ -1,0 +1,18 @@
+Betreff-Vorschlag: Willkommen bei ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+herzlich willkommen bei ZVG — wir freuen uns, Sie als Kunden begrüssen zu dürfen.
+
+Unser Team unterstützt Sie bei Produktinformationen, Bestellungen und Lieferungen. Sie erreichen uns unter sales@zvg.com.
+
+Wir freuen uns auf eine erfolgreiche Zusammenarbeit.
+
+Mit freundlichen Grüssen
+Ihr ZVG Team
+
+---
+Verwendung: Word Templates (Datenquelle Kunde)
+Felder: Kundenname, Kontaktname, E-Mail, etc.

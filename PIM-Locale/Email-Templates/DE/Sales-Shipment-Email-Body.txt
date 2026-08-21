@@ -1,0 +1,20 @@
+Betreff-Vorschlag: Versandbenachrichtigung — Auftrag %1 — ZVG
+
+---
+
+Sehr geehrte Damen und Herren,
+
+Ihre Bestellung wurde versendet.
+
+Anbei finden Sie den Lieferschein %1 zu Auftrag %2.
+
+Bei Fragen zur Lieferung erreichen Sie uns unter sales@zvg.com.
+
+Mit freundlichen Grüssen
+Ihr ZVG Team
+
+---
+Felder in Word (XML Mapping Pane):
+  %1 = Lieferscheinnr.
+  %2 = Auftragsnr.
+  Kundenname = Lieferadresse Name

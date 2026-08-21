@@ -1,0 +1,22 @@
+Subject line suggestion: Sales Invoice %1 — ZVG
+
+---
+
+Dear Customer,
+
+Please find attached invoice %1 dated %2 for the amount of %3.
+
+Payment is due by %4. If you have already paid, please disregard this reminder.
+
+For questions about this invoice, contact us at accounts@zvg.com or sales@zvg.com.
+
+Kind regards,
+ZVG Team
+
+---
+Merge fields to add in Word (XML Mapping Pane):
+  %1 = Document No. (Invoice No.)
+  %2 = Document Date
+  %3 = Amount Including VAT
+  %4 = Due Date
+  Customer Name = Bill-to Customer Name

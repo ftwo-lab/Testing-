@@ -1,0 +1,21 @@
+Subject line suggestion: Sales Order Confirmation %1 — ZVG
+
+---
+
+Dear Customer,
+
+Thank you for your order.
+
+Please find attached our sales order confirmation %1 dated %2.
+
+We will process your order and keep you informed about shipment. If you need to change delivery details or have questions, please contact us at sales@zvg.com.
+
+Kind regards,
+ZVG Team
+
+---
+Merge fields to add in Word (XML Mapping Pane):
+  %1 = Document No. (Order No.)
+  %2 = Document Date
+  Customer Name = Bill-to Customer Name
+  Ship-to Address fields = as needed

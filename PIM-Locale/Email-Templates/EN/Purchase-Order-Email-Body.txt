@@ -1,0 +1,20 @@
+Subject line suggestion: Purchase Order %1 — ZVG
+
+---
+
+Dear Vendor,
+
+Please find attached our purchase order %1 dated %2.
+
+Kindly confirm receipt of this order and advise expected delivery date. If any items are unavailable or prices differ from our agreement, please contact us immediately at purchasing@zvg.com.
+
+Thank you for your cooperation.
+
+Kind regards,
+ZVG Purchasing Team
+
+---
+Merge fields to add in Word (XML Mapping Pane):
+  %1 = Document No. (PO No.)
+  %2 = Document Date
+  Vendor Name = Buy-from Vendor Name

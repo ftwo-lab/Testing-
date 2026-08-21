@@ -1,0 +1,21 @@
+Subject line suggestion: Shipment Notification — Order %1 — ZVG
+
+---
+
+Dear Customer,
+
+Good news — your order has been shipped.
+
+Please find attached shipment document %1 for sales order %2.
+
+If you track deliveries online, use the tracking information in the attached document. For delivery questions, contact us at sales@zvg.com.
+
+Kind regards,
+ZVG Team
+
+---
+Merge fields to add in Word (XML Mapping Pane):
+  %1 = Shipment No. / Posted Shipment No.
+  %2 = Order No.
+  Customer Name = Ship-to Name
+  Tracking No. = if available on report
