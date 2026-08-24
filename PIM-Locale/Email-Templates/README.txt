@@ -20,4 +20,8 @@ How to use (quick steps):
 
 See Email-Templates-Setup-Guide.md for full step-by-step instructions.
 
+If Print/Send → Send by Email does not work but SMTP test email does,
+see Send-By-Email-Troubleshooting.md (Email Scenarios, customer E-Mail,
+Gmail port 587, Email Outbox, Email Dispatcher).
+
 Prepared for ZVG / ICS Master by ZVG — August 2026

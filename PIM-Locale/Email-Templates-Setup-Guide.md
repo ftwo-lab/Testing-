@@ -62,11 +62,14 @@ Open the **`Email-Templates`** folder in this package:
 
 1. Search: **Email Scenarios**
 2. Assign your email account to:
+   - **Default**
    - Sales Invoice
    - Sales Order
    - Sales Quote
    - Purchase Order
    - (other scenarios you use)
+
+A passing **Send Test Email** does **not** mean **Print/Send → Send by Email** will work. The test never uses scenarios, the customer address, or the quote PDF. If the action fails, use **`Send-By-Email-Troubleshooting.md`**.
 
 ---
 
@@ -226,7 +229,8 @@ These are **two different Word layouts**. You must set up both if you want custo
 | Body does not update after edit | Re-import layout on **Custom Report Layouts**; refresh Report Selection link |
 | PDF attaches but body is wrong | You edited Report Layout, not **Email Body Layout** — they are different |
 | Word Template not in email editor | Template must match entity (Customer template only on Customer emails) |
-| Email does not send | Check **Set Up Email** and **Email Accounts** |
+| **SMTP test works, but Print/Send → Send by Email does nothing or fails** | This is **not** an SMTP outage. Follow **`Send-By-Email-Troubleshooting.md`**: assign **Email Scenarios** (Default + Sales Quote), set SMTP **Sender Type** = Specific User, fill the customer **E-Mail**, check **Email Outbox**, use Gmail port **587** + App Password, and start the **Email Dispatcher** job queue. |
+| Email does not send | Check **Set Up Email**, **Email Accounts**, **Email Outbox**, and **Sent Emails** |
 | Wrong language template | Create separate EN/DE layouts; check Word Template Language field |
 
 ---
