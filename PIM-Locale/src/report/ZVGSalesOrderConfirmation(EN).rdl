@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>DataSource</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="OrderNo_">
+          <DataField>OrderNo_</DataField>
+        </Field>
+        <Field Name="Document_Date">
+          <DataField>Document_Date</DataField>
+        </Field>
+        <Field Name="Order_Date">
+          <DataField>Order_Date</DataField>
+        </Field>
+        <Field Name="External_Document_No_">
+          <DataField>External_Document_No_</DataField>
+        </Field>
+        <Field Name="Quote_No_">
+          <DataField>Quote_No_</DataField>
+        </Field>
+        <Field Name="Payment_Terms_Code">
+          <DataField>Payment_Terms_Code</DataField>
+        </Field>
+        <Field Name="Payment_Terms_Description">
+          <DataField>Payment_Terms_Description</DataField>
+        </Field>
+        <Field Name="Payment_Method_Code">
+          <DataField>Payment_Method_Code</DataField>
+        </Field>
+        <Field Name="Payment_Method_Description">
+          <DataField>Payment_Method_Description</DataField>
+        </Field>
+        <Field Name="Currency_Code">
+          <DataField>Currency_Code</DataField>
+        </Field>
+        <Field Name="Sell_to_Customer_No_">
+          <DataField>Sell_to_Customer_No_</DataField>
+        </Field>
+        <Field Name="Sell_to_Customer_Name">
+          <DataField>Sell_to_Customer_Name</DataField>
+        </Field>
+        <Field Name="Ship_to_Address">
+          <DataField>Ship_to_Address</DataField>
+        </Field>
+        <Field Name="Ship_to_Address_2">
+          <DataField>Ship_to_Address_2</DataField>
+        </Field>
+        <Field Name="Ship_to_City">
+          <DataField>Ship_to_City</DataField>
+        </Field>
+        <Field Name="Ship_to_Country_Region_Code">
+          <DataField>Ship_to_Country_Region_Code</DataField>
+        </Field>
+        <Field Name="Ship_to_Post_Code">
+          <DataField>Ship_to_Post_Code</DataField>
+        </Field>
+        <Field Name="Ship_to_Contact">
+          <DataField>Ship_to_Contact</DataField>
+        </Field>
+        <Field Name="Ship_to_Phone_No_">
+          <DataField>Ship_to_Phone_No_</DataField>
+        </Field>
+        <Field Name="Bill_to_Customer_No_">
+          <DataField>Bill_to_Customer_No_</DataField>
+        </Field>
+        <Field Name="Bill_to_Name">
+          <DataField>Bill_to_Name</DataField>
+        </Field>
+        <Field Name="Bill_to_Address">
+          <DataField>Bill_to_Address</DataField>
+        </Field>
+        <Field Name="Bill_to_Address_2">
+          <DataField>Bill_to_Address_2</DataField>
+        </Field>
+        <Field Name="Bill_to_City">
+          <DataField>Bill_to_City</DataField>
+        </Field>
+        <Field Name="Bill_to_Post_Code">
+          <DataField>Bill_to_Post_Code</DataField>
+        </Field>
+        <Field Name="Bill_to_Country_Region_Code">
+          <DataField>Bill_to_Country_Region_Code</DataField>
+        </Field>
+        <Field Name="Bill_to_Contact">
+          <DataField>Bill_to_Contact</DataField>
+        </Field>
+        <Field Name="Prices_Including_VAT">
+          <DataField>Prices_Including_VAT</DataField>
+        </Field>
+        <Field Name="Amount">
+          <DataField>Amount</DataField>
+        </Field>
+        <Field Name="Amount_Including_VAT">
+          <DataField>Amount_Including_VAT</DataField>
+        </Field>
+        <Field Name="Currency_Symbol">
+          <DataField>Currency_Symbol</DataField>
+        </Field>
+        <Field Name="OldSaleCustomerNo">
+          <DataField>OldSaleCustomerNo</DataField>
+        </Field>
+        <Field Name="OldBillCustomerNo">
+          <DataField>OldBillCustomerNo</DataField>
+        </Field>
+        <Field Name="Name">
+          <DataField>Name</DataField>
+        </Field>
+        <Field Name="Picture">
+          <DataField>Picture</DataField>
+        </Field>
+        <Field Name="CompanyAddress">
+          <DataField>CompanyAddress</DataField>
+        </Field>
+        <Field Name="CompanyAddress_2">
+          <DataField>CompanyAddress_2</DataField>
+        </Field>
+        <Field Name="CompanyCity">
+          <DataField>CompanyCity</DataField>
+        </Field>
+        <Field Name="CompanyPost_Code">
+          <DataField>CompanyPost_Code</DataField>
+        </Field>
+        <Field Name="CompanyPhone_No_">
+          <DataField>CompanyPhone_No_</DataField>
+        </Field>
+        <Field Name="CompanyVAT_Registration_No_">
+          <DataField>CompanyVAT_Registration_No_</DataField>
+        </Field>
+        <Field Name="CompanyVAT_Representative">
+          <DataField>CompanyVAT_Representative</DataField>
+        </Field>
+        <Field Name="CompanyContact_Person">
+          <DataField>CompanyContact_Person</DataField>
+        </Field>
+        <Field Name="CompanyHome_Page">
+          <DataField>CompanyHome_Page</DataField>
+        </Field>
+        <Field Name="CompanyE_Mail">
+          <DataField>CompanyE_Mail</DataField>
+        </Field>
+        <Field Name="CompanyFax_No_">
+          <DataField>CompanyFax_No_</DataField>
+        </Field>
+        <Field Name="CompanyCountry_Region_Code">
+          <DataField>CompanyCountry_Region_Code</DataField>
+        </Field>
+        <Field Name="No_">
+          <DataField>No_</DataField>
+        </Field>
+        <Field Name="Display_Item_No">
+          <DataField>Display_Item_No</DataField>
+        </Field>
+        <Field Name="Description">
+          <DataField>Description</DataField>
+        </Field>
+        <Field Name="Variant_Code">
+          <DataField>Variant_Code</DataField>
+        </Field>
+        <Field Name="Unit_Price">
+          <DataField>Unit_Price</DataField>
+        </Field>
+        <Field Name="Unit_of_Measure_Code">
+          <DataField>Unit_of_Measure_Code</DataField>
+        </Field>
+        <Field Name="Line_Amount">
+          <DataField>Line_Amount</DataField>
+        </Field>
+        <Field Name="Quantity">
+          <DataField>Quantity</DataField>
+        </Field>
+        <Field Name="Base_Unit_Price_excl_VAT">
+          <DataField>Base_Unit_Price_excl_VAT</DataField>
+        </Field>
+        <Field Name="Base_Unit_Price_incl_VAT">
+          <DataField>Base_Unit_Price_incl_VAT</DataField>
+        </Field>
+        <Field Name="VAT_Bus__Posting_Group">
+          <DataField>VAT_Bus__Posting_Group</DataField>
+        </Field>
+        <Field Name="VAT_Prod__Posting_Group">
+          <DataField>VAT_Prod__Posting_Group</DataField>
+        </Field>
+        <Field Name="VAT__">
+          <DataField>VAT__</DataField>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>DataSet_Result</rd:DataSetName>
+      </rd:DataSetInfo>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+        <Textbox Name="tb_OrderNo_">
+          <CanGrow>true</CanGrow>
+          <KeepTogether>true</KeepTogether>
+          <Paragraphs>
+            <Paragraph>
+              <TextRuns>
+                <TextRun>
+                  <Value>=First(Fields!OrderNo_.Value, "DataSet_Result")</Value>
+                  <Style>
+                    <FontSize>10pt</FontSize>
+                  </Style>
+                </TextRun>
+              </TextRuns>
+              <Style />
+            </Paragraph>
+          </Paragraphs>
+          <rd:DefaultName>tb_OrderNo_</rd:DefaultName>
+          <Top>0.00in</Top>
+          <Left>0.1in</Left>
+          <Height>0.25in</Height>
+          <Width>7.5in</Width>
+          <ZIndex>1</ZIndex>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+            <PaddingLeft>2pt</PaddingLeft>
+            <PaddingRight>2pt</PaddingRight>
+            <PaddingTop>2pt</PaddingTop>
+            <PaddingBottom>2pt</PaddingBottom>
+          </Style>
+        </Textbox>
+        <Textbox Name="tb_Sell_to_Customer_Name">
+          <CanGrow>true</CanGrow>
+          <KeepTogether>true</KeepTogether>
+          <Paragraphs>
+            <Paragraph>
+              <TextRuns>
+                <TextRun>
+                  <Value>=First(Fields!Sell_to_Customer_Name.Value, "DataSet_Result")</Value>
+                  <Style>
+                    <FontSize>10pt</FontSize>
+                  </Style>
+                </TextRun>
+              </TextRuns>
+              <Style />
+            </Paragraph>
+          </Paragraphs>
+          <rd:DefaultName>tb_Sell_to_Customer_Name</rd:DefaultName>
+          <Top>0.28in</Top>
+          <Left>0.1in</Left>
+          <Height>0.25in</Height>
+          <Width>7.5in</Width>
+          <ZIndex>1</ZIndex>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+            <PaddingLeft>2pt</PaddingLeft>
+            <PaddingRight>2pt</PaddingRight>
+            <PaddingTop>2pt</PaddingTop>
+            <PaddingBottom>2pt</PaddingBottom>
+          </Style>
+        </Textbox>
+        <Textbox Name="tb_Bill_to_Name">
+          <CanGrow>true</CanGrow>
+          <KeepTogether>true</KeepTogether>
+          <Paragraphs>
+            <Paragraph>
+              <TextRuns>
+                <TextRun>
+                  <Value>=First(Fields!Bill_to_Name.Value, "DataSet_Result")</Value>
+                  <Style>
+                    <FontSize>10pt</FontSize>
+                  </Style>
+                </TextRun>
+              </TextRuns>
+              <Style />
+            </Paragraph>
+          </Paragraphs>
+          <rd:DefaultName>tb_Bill_to_Name</rd:DefaultName>
+          <Top>0.56in</Top>
+          <Left>0.1in</Left>
+          <Height>0.25in</Height>
+          <Width>7.5in</Width>
+          <ZIndex>1</ZIndex>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+            <PaddingLeft>2pt</PaddingLeft>
+            <PaddingRight>2pt</PaddingRight>
+            <PaddingTop>2pt</PaddingTop>
+            <PaddingBottom>2pt</PaddingBottom>
+          </Style>
+        </Textbox>
+        <Textbox Name="tb_Description">
+          <CanGrow>true</CanGrow>
+          <KeepTogether>true</KeepTogether>
+          <Paragraphs>
+            <Paragraph>
+              <TextRuns>
+                <TextRun>
+                  <Value>=First(Fields!Description.Value, "DataSet_Result")</Value>
+                  <Style>
+                    <FontSize>10pt</FontSize>
+                  </Style>
+                </TextRun>
+              </TextRuns>
+              <Style />
+            </Paragraph>
+          </Paragraphs>
+          <rd:DefaultName>tb_Description</rd:DefaultName>
+          <Top>0.84in</Top>
+          <Left>0.1in</Left>
+          <Height>0.25in</Height>
+          <Width>7.5in</Width>
+          <ZIndex>1</ZIndex>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+            <PaddingLeft>2pt</PaddingLeft>
+            <PaddingRight>2pt</PaddingRight>
+            <PaddingTop>2pt</PaddingTop>
+            <PaddingBottom>2pt</PaddingBottom>
+          </Style>
+        </Textbox>
+        <Textbox Name="tb_Display_Item_No">
+          <CanGrow>true</CanGrow>
+          <KeepTogether>true</KeepTogether>
+          <Paragraphs>
+            <Paragraph>
+              <TextRuns>
+                <TextRun>
+                  <Value>=First(Fields!Display_Item_No.Value, "DataSet_Result")</Value>
+                  <Style>
+                    <FontSize>10pt</FontSize>
+                  </Style>
+                </TextRun>
+              </TextRuns>
+              <Style />
+            </Paragraph>
+          </Paragraphs>
+          <rd:DefaultName>tb_Display_Item_No</rd:DefaultName>
+          <Top>1.12in</Top>
+          <Left>0.1in</Left>
+          <Height>0.25in</Height>
+          <Width>7.5in</Width>
+          <ZIndex>1</ZIndex>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+            <PaddingLeft>2pt</PaddingLeft>
+            <PaddingRight>2pt</PaddingRight>
+            <PaddingTop>2pt</PaddingTop>
+            <PaddingBottom>2pt</PaddingBottom>
+          </Style>
+        </Textbox>
+        </ReportItems>
+        <Height>2.5in</Height>
+        <Style />
+      </Body>
+      <Width>8.27in</Width>
+      <Page>
+        <PageHeight>11.69in</PageHeight>
+        <PageWidth>8.27in</PageWidth>
+        <LeftMargin>0.5in</LeftMargin>
+        <RightMargin>0.5in</RightMargin>
+        <TopMargin>0.5in</TopMargin>
+        <BottomMargin>0.5in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>4</NumberOfColumns>
+      <NumberOfRows>2</NumberOfRows>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportID>a1b2c3d4-e5f6-7890-abcd-ef1234567890</rd:ReportID>
+</Report>
