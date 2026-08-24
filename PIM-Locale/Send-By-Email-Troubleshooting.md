@@ -31,6 +31,7 @@ Typical errors:
 |------------------------|------------|
 | No email account for the scenario / default | Assign scenarios (step 2) |
 | Email address is empty | Put an E-Mail on the customer (step 3) |
+| *The SMTP server rejected the…* | Click **Show Error**. Gmail rejected this message (app password, port, From address). See step 4. |
 | Authentication / SMTP / 535 / 534 | Gmail app password + sender type (steps 4–5) |
 | Cannot generate report / layout | Report Selection for Quote (step 6) |
 | Message sits on **Queued** forever | Start **Email Dispatcher** job (step 7) |
@@ -38,6 +39,21 @@ Typical errors:
 Also search **Sent Emails**. If the quote email is there, BC sent it — check spam or the **To** address.
 
 If **nothing** appears in Outbox and no editor opens, continue with steps 2–3 and 6. The failure is usually **before** SMTP (missing To-address, report, or scenario).
+
+### If Outbox only shows **Test Email Message** (no quote row)
+
+That row is **not** Sales Quote **Send by Email**. Description **Test Email Message**, sender **FUNC3**, from `ftwo@netgains.org` is only **Email Accounts → Send Test Email**.
+
+**Print/Send → Send by Email** creates an outbox row only after BC has a recipient, a quote PDF, and you send from the compose window. If the action “does nothing”, **no new error appears in Outbox** — that is expected.
+
+1. On the **Failed** test row, click **Show Error** (red X). Read the full text after *The SMTP server rejected the…*. That is Gmail rejecting the **test** (often wrong password, port 465, or FUNC3 sending as `ftwo@netgains.org`).
+2. Go back to quote **1169**, click **Send by Email** once, and watch **this quote page** (not Outbox):
+   - A **notification** at the top (yellow/red)
+   - A dialog: empty email, no scenario, cannot create report
+   - The **email compose** window (To / Subject / PDF). Outbox updates only after you press **Send** there.
+3. Confirm customer **L.R. Eurotechnik GmbH** has **E-Mail**, **Email Scenarios** include **Sales Quote**, and **Print...** / **Download as PDF** work on the same quote.
+
+Until a row appears whose description is the **quote number / customer name** (not “Test Email Message”), the quote action is still failing **before** SMTP.
 
 ### 2. Assign **Email Scenarios** (most common miss)
 
