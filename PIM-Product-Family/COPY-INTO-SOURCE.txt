@@ -1,0 +1,17 @@
+Copy this folder into your AL app (ZVG-Nonpa / ICS Master).
+
+Do NOT copy PIM-Product-Family as one nested folder.
+Merge src into your existing src folders:
+
+  PIM-Product-Family/src/enum/*            ->  your-app/src/enum/
+  PIM-Product-Family/src/table/*           ->  your-app/src/table/
+  PIM-Product-Family/src/tableextension/*  ->  your-app/src/tableextension/   (create folder if missing)
+  PIM-Product-Family/src/codeunit/*        ->  your-app/src/codeunit/
+  PIM-Product-Family/src/page/*            ->  your-app/src/page/
+  PIM-Product-Family/src/pageextension/*   ->  your-app/src/pageextension/
+
+app.json idRanges must include 50120 to 50136.
+
+Then publish (F5).
+
+Zip of this folder: PIM-Product-Family.zip at the repo root.
