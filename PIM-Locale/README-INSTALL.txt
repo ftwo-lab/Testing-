@@ -7,6 +7,7 @@ Copy everything from PIM-Locale/src/ into your ZVG-Nonpa/src/ folder.
 
 Example:
   PIM-Locale/src/table/*         ->  ZVG-Nonpa/src/table/
+  PIM-Locale/src/tableextension/* ->  ZVG-Nonpa/src/tableextension/
   PIM-Locale/src/page/*          ->  ZVG-Nonpa/src/page/
   PIM-Locale/src/codeunit/*      ->  ZVG-Nonpa/src/codeunit/
   PIM-Locale/src/enum/*          ->  ZVG-Nonpa/src/enum/
@@ -86,6 +87,17 @@ After Locales -> Germany or Swiss German:
 
 Marketing Text and Extended Details are NO LONGER shown in separate locale factboxes.
 
+STEP 7: Product families on default items
+-----------------------------------------
+1. Search: PIM Product Family Groups -> Create Example Families
+   (optional: PIM Product Families -> Create Example Items)
+2. Open Item Card -> FastTab Product Family
+   - Product Family = family code
+   - Family Role = Default Item (Parent)
+3. Processing -> Product Family -> Add Variant (pick related SKU)
+4. Open Product Family Card to see Parent / V1 / V2
+   See PIM-Product-Family-Guide.md
+
 FILES INCLUDED
 --------------
 table/
@@ -95,16 +107,24 @@ table/
   PIMItemLocaleField.Table.al
   PIMLocaleTableSetup.Table.al
   PIMItemLocaleAttribute.Table.al
+  PIMProductFamilyGroup.Table.al
+  PIMProductFamily.Table.al
+  PIMProductFamilyMember.Table.al
+
+tableextension/
+  PIMItemFamily.TableExt.al
 
 enum/
   PIMTranslationStatus.Enum.al
   PIMAIProvider.Enum.al
+  PIMFamilyMemberRole.Enum.al
 
 codeunit/
   PIMLocaleSession.Codeunit.al
   PIMLocaleMgt.Codeunit.al
   PIMAITranslator.Codeunit.al
   PIMLocalesInstall.Codeunit.al
+  PIMProductFamilyMgt.Codeunit.al
 
 page/
   PIMLocales.Page.al
@@ -118,8 +138,18 @@ page/
   PIMItemLocaleRelatedFields.Page.al
   PIMItemLocaleOverview.Page.al
   PIMTableFieldList.Page.al
+  PIMProductFamilyGroups.Page.al
+  PIMProductFamilyGroupCard.Page.al
+  PIMProductFamilies.Page.al
+  PIMProductFamilyCard.Page.al
+  PIMProductFamilyMembers.Page.al
+  PIMFamilyMemberListPart.Page.al
+  PIMItemFamilyFactbox.Page.al
+  PIMFamiliesListPart.Page.al
 
 pageextension/
   PIMItemCardLocales.PageExt.al
   PIMExtendedDetailCardLocales.PageExt.al
   PIMEditMarketingTextLocales.PageExt.al
+  PIMItemCardFamily.PageExt.al
+  PIMItemListFamily.PageExt.al

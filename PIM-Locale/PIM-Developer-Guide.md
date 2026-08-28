@@ -231,8 +231,8 @@ This section defines **every major product concept** in our solution. A new deve
 | **Pictures** | Product imagery | BC `Item Picture` | Binary media — not text-translated; may have locale-specific images in future |
 | **SharePoint Attachments** | Supplementary files (PDF, Word, datasheets) | SharePoint via BC integration | **Outside** core item record; **document translation planned** |
 | **Locales** | Language/market-specific data overlay | PIM tables (`PIM Locale`, `PIM Item Locale Data`, etc.) | EN = source; DE, CH = targets |
-| **Product Family** | Groups related products under a family code | ZVG custom tables | Family-level metadata; members share structure |
-| **Product Family Groups** | Higher-level grouping of families | ZVG custom tables | Organisational hierarchy for catalogues |
+| **Product Family** | Groups related products under a family code | PIM tables 50120–50122 | Default item (Parent) + variants (V1, V2); Item Card FastTab |
+| **Product Family Groups** | Main product family (brand/line) | PIM table 50120 | Coca Cola, Cleaning Soap |
 | **Related Items** | Cross-sell, upsell, spare parts links | ZVG / BC item references | Links by Item No.; content on each item still locale-specific |
 
 ### 8.2 Extended Text — the rich content hub
@@ -318,23 +318,44 @@ Locale data is stored in PIM tables and **applied on screen** when the user sele
 
 ## 9. Product families, related items, and shared content
 
-### 9.1 Product Family and Product Family Groups
+### 9.1 Hierarchy: main family → product family → default item → variants
+
+PIM product families group **standard Item records** (default items). Each SKU remains its own Item. One item in the group is the **default item (Parent / Produkt Main)**; others are **variants (V1, V2, …)** under that parent.
 
 ```
-Product Family Group (e.g. "Cleaning Products")
- └── Product Family (e.g. "CC -03" ClaraClean line)
-      ├── Item 000000385  ClaraClean Brillant Eco
-      ├── Item 000000386  ClaraClean variant B
-      └── Item 000000387  Related accessory
+Main Product Family (PIM Product Family Group)
+ └── Product Family (classification e.g. Glass Bottle, PET, Can)
+      ├── Default Item (Parent)     e.g. Coca Cola Glass 0.5 L
+      │    ├── Variant V1           e.g. 0.33 L
+      │    └── Variant V2           e.g. 0.1 L
+      └── Additional default items  (optional; used when UOM/packaging cannot share a parent)
 ```
 
-| Concept | Purpose |
-|---------|---------|
-| **Product Family Code** | Groups items in the same product line (visible on Item Card) |
-| **Product Family Group** | Higher-level catalogue grouping for reporting and navigation |
-| **Family members** | All items sharing a family code |
+| Screenshot / PIM term | AL object | On Item Card |
+|-----------------------|-----------|--------------|
+| Main Product Family | Table 50120 `PIM Product Family Group` | `PIM Family Group Code` |
+| Product Family | Table 50121 `PIM Product Family` | `PIM Product Family Code` |
+| Classification | Family field | `PIM Classification` |
+| Default item / Parent / Produkt Main | Member role `Default Item` | `PIM Family Role` |
+| Variant / V1 / V2 | Member role `Variant` | `PIM Variant Label`, `PIM Parent Item No.` |
+| Variant Dimension | Family field (e.g. Gebinde Volumen) | FlowField `PIM Variant Dimension` |
+| Dimension value | Member / item field | `PIM Variant Dim. Value` |
 
-### 9.2 Shared SharePoint notes and links
+A family may have **several default items**. Cleaning Soap keeps Blue/Pink/Yellow **1L** as Parent + V1 + V2 (same Bottle UOM). Blue **2L**, Pink **0.5L**, and Yellow **5L** are extra default items because volume/packaging can change UOM (Bottle vs Canister). Coca Cola splits **Glass / PET / Can** into three families under one main group; volume is the variant dimension.
+
+**Do not use native `Item Variant` (5401)** for this model. Native variants are sub-SKUs of one item. These examples are separate items with their own description, UOM, and VAT, linked through `PIM Product Family Member`.
+
+### 9.2 How to assign default items
+
+1. Tell Me → **PIM Product Family Groups** / **PIM Product Families** (optional: **Create Example Families**).
+2. On **Item Card** → FastTab **Product Family**, set **Product Family** and **Family Role = Default Item**.
+3. **Processing → Product Family → Add Variant** to hang another item under that default item.
+4. **Copy UOM and VAT from Default Item** copies `Base Unit of Measure` and `VAT Prod. Posting Group` to the variant.
+5. The family factbox shows the Parent / V1 / V2 list. The family card has the same indented list.
+
+Full walkthrough: `PIM-Locale/PIM-Product-Family-Guide.md`.
+
+### 9.3 Shared SharePoint notes and links
 
 Family members can **share** supplementary content:
 
@@ -348,7 +369,7 @@ Family members can **share** supplementary content:
 
 > **Developer note:** Implement family-level SharePoint inheritance according to ZVG table design. The PIM locale extension today focuses on **item-level** text. Family-level sharing is part of the broader ZVG SharePoint integration.
 
-### 9.3 Related Items
+### 9.4 Related Items
 
 | Type | Example |
 |------|---------|
@@ -629,7 +650,8 @@ BC: **Extension Management → Allow HTTPClient Requests = ON**
 | Item Attributes (text values) | ✅ Implemented |
 | PIM Locale Table Setup (custom tables) | ✅ Implemented |
 | Channel in Extended Text | ✅ Data model exists; locale overlay applies |
-| Product Family / Groups | ✅ ZVG tables; locale on family metadata — future |
+| Product Family / Groups | ✅ PIM tables 50120–50122; Item Card default item + V1/V2 |
+| Default item (Parent) vs Variant | ✅ Role on Item; family factbox and family card |
 | Related items | ✅ Links exist; per-item locale |
 | SharePoint Attachments | ✅ Storage exists |
 | **SharePoint document translation** | 🔲 **Planned** |
@@ -652,9 +674,10 @@ BC: **Extension Management → Allow HTTPClient Requests = ON**
 | **Channel** | Sales/distribution channel — stored in Extended Text `Channel Code` |
 | **Extended Text** | ZVG table 50116 — rich text, SEO, channel-specific content |
 | **Product Family** | Group of related items under one family code |
-| **Product Family Group** | Higher-level grouping of product families |
+| **Product Family Group** | Main product family (brand/line), e.g. Coca Cola |
+| **Default Item** | Parent / Produkt Main in a family — the item variants hang off |
 | **Related Items** | Linked items (cross-sell, accessories) |
-| **Variant** | Item sub-SKU (size, colour) tied to base item |
+| **Variant** | Related Item SKU (V1, V2) under a default item — not native BC Item Variant |
 | **Item UOM** | Unit of measure (roll, piece, pallet) |
 | **Category** | Item categorisation code and hierarchy |
 | **Item Attributes** | Flexible name/value pairs on items |
@@ -680,8 +703,11 @@ A: Channel-specific copy (web vs B2B) naturally varies per item and language. St
 **Q: Do family members automatically share translated text?**  
 A: No. Family members share **SharePoint notes and links** at family level. Each item's text fields are still translated per item.
 
+**Q: How do I get Parent / V1 / V2 on my default items?**  
+A: Assign a **Product Family** on the Item Card, set **Family Role = Default Item**, then **Add Variant** for the related SKUs. See `PIM-Product-Family-Guide.md`. Do not use native Item Variants for this.
+
 **Q: Are variant codes translated?**  
-A: No. Variant codes and numeric values stay as-is. Text variant attributes can be translated.
+A: No. Variant labels (Parent, V1) and dimension values stay as-is. Text attribute values can be translated.
 
 **Q: Does German translation overwrite English in the database?**  
 A: No. English remains in source fields. German is stored in PIM locale tables and shown when locale DE is active.
@@ -697,10 +723,14 @@ A: Future feature using Azure **Document Translation** API — separate from tex
 |----------|----------|
 | AL source code | `PIM-Locale/` in `ftwo-lab/Testing-` |
 | Install guide | `PIM-Locale/README-INSTALL.txt` |
+| Product family how-to | `PIM-Locale/PIM-Product-Family-Guide.md` |
 | This handbook | `PIM-Locale/PIM-Developer-Guide.md` |
 | BC extension name | ICS Master by ZVG |
 | Extended Text table | 50116 |
 | Extended Detail Card page | 50189 |
+| Product Family Group table | 50120 |
+| Product Family table | 50121 |
+| Product Family Member table | 50122 |
 | Azure Translator resource | MSBCTranslator (eastasia) |
 
 ---
@@ -711,6 +741,7 @@ A: Future feature using Azure **Document Translation** API — separate from tex
 |---------|------|---------|
 | 1.0 | Aug 2026 | Initial developer guide |
 | 2.0 | Aug 2026 | Professional architecture; product model; families; channel in Extended Text; SharePoint future; removed weekly progress |
+| 2.1 | Aug 2026 | Default items / Parent / V1 / V2 product family on standard Item |
 
 ---
 
