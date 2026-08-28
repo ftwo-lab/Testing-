@@ -1,5 +1,7 @@
 # Product families, default items, and variants
 
+**Attach the AL files:** use folder `PIM-Product-Family/` (or zip `PIM-Product-Family.zip`). Copy `src/*` into `ZVG-Nonpa/src/` and follow `PIM-Product-Family/README.md` for copy paths and Item Card test steps.
+
 This is how the **Cleaning Soap** and **Coca Cola** hierarchies from the product-structure examples are modelled on **standard Business Central items** (the Item Card / Item List — your default items).
 
 Each sellable SKU stays a normal **Item**. The PIM layer groups those items so one SKU is the **default item (Parent)** and the others are **V1, V2, …** under it.
