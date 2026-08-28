@@ -34,6 +34,12 @@ page 50125 "PIM Family Member ListPart"
                         CurrPage.Update(false);
                     end;
                 }
+                field("Variant Code"; Rec."Variant Code")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Item Variant';
+                    ToolTip = 'Blank on the default item. Filled for a native Business Central Item Variant.';
+                }
                 field(Description; Rec.Description)
                 {
                     ApplicationArea = All;
@@ -93,6 +99,21 @@ page 50125 "PIM Family Member ListPart"
                     PIMProductFamilyMgt: Codeunit "PIM Product Family Mgt.";
                 begin
                     PIMProductFamilyMgt.CopyOperationalAttributesFromParent(Rec."Item No.");
+                    CurrPage.Update(false);
+                end;
+            }
+            action(LoadItemVariants)
+            {
+                ApplicationArea = All;
+                Caption = 'Load Item Variants';
+                Image = ItemVariant;
+                ToolTip = 'Pull native Item Variants of this default item into the family as V1, V2.';
+
+                trigger OnAction()
+                var
+                    PIMProductFamilyMgt: Codeunit "PIM Product Family Mgt.";
+                begin
+                    PIMProductFamilyMgt.SyncNativeVariants(Rec."Item No.");
                     CurrPage.Update(false);
                 end;
             }

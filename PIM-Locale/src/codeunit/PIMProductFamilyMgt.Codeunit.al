@@ -141,6 +141,7 @@ codeunit 50120 "PIM Product Family Mgt."
         RecalculateFamilyDisplay(Item."PIM Product Family Code");
         RefreshItemLabels(Item);
         if Item.Modify(false) then;
+        SyncNativeVariants(Item."No.");
     end;
 
     procedure AddItemAsVariant(ParentItemNo: Code[20]; VariantItemNo: Code[20]; DimensionValue: Text[50])
@@ -235,6 +236,7 @@ codeunit 50120 "PIM Product Family Mgt."
         ParentMember.SetCurrentKey("Product Family Code", "Display Order");
         ParentMember.SetRange("Product Family Code", FamilyCode);
         ParentMember.SetRange(Role, ParentMember.Role::"Default Item");
+        ParentMember.SetRange("Variant Code", '');
         if ParentMember.FindSet(true) then
             repeat
                 OrderNo += 10;
@@ -259,7 +261,8 @@ codeunit 50120 "PIM Product Family Mgt."
                         VariantMember.Indentation := 1;
                         VariantMember."Variant Label" := CopyStr(StrSubstNo('V%1', VariantNo), 1, MaxStrLen(VariantMember."Variant Label"));
                         VariantMember.Modify(false);
-                        ApplyMemberToItem(VariantMember);
+                        if VariantMember."Variant Code" = '' then
+                            ApplyMemberToItem(VariantMember);
                     until VariantMember.Next() = 0;
             until ParentMember.Next() = 0;
 
@@ -315,24 +318,24 @@ codeunit 50120 "PIM Product Family Mgt."
         CanisterUOM := ResolveUOM('CANISTER', BaseUOM);
 
         Created += CreateExampleItem('PIM-SOAP-BLU-1L', 'Cleaning Soap, Blue, 1L', 'SOAP', "PIM Family Member Role"::"Default Item", '', 'Blue 1L', BottleUOM, GenProd, InvPost, VatProd, true);
-        Created += CreateExampleItem('PIM-SOAP-PNK-1L', 'Cleaning Soap, Pink, 1L', 'SOAP', "PIM Family Member Role"::Variant, 'PIM-SOAP-BLU-1L', 'Pink 1L', BottleUOM, GenProd, InvPost, VatProd, false);
-        Created += CreateExampleItem('PIM-SOAP-YEL-1L', 'Cleaning Soap, Yellow, 1L', 'SOAP', "PIM Family Member Role"::Variant, 'PIM-SOAP-BLU-1L', 'Yellow 1L', BottleUOM, GenProd, InvPost, VatProd, false);
+        Created += CreateExampleNativeVariant('PIM-SOAP-BLU-1L', 'PNK', 'Pink, 1L', 'Pink 1L');
+        Created += CreateExampleNativeVariant('PIM-SOAP-BLU-1L', 'YEL', 'Yellow, 1L', 'Yellow 1L');
         Created += CreateExampleItem('PIM-SOAP-BLU-2L', 'Cleaning Soap, Blue, 2L', 'SOAP', "PIM Family Member Role"::"Default Item", '', 'Blue 2L', BottleUOM, GenProd, InvPost, VatProd, false);
         Created += CreateExampleItem('PIM-SOAP-PNK-05L', 'Cleaning Soap, Pink, 0.5L', 'SOAP', "PIM Family Member Role"::"Default Item", '', 'Pink 0.5L', BottleUOM, GenProd, InvPost, VatProd, false);
         Created += CreateExampleItem('PIM-SOAP-YEL-5L', 'Cleaning Soap, Yellow, 5L', 'SOAP', "PIM Family Member Role"::"Default Item", '', 'Yellow 5L', CanisterUOM, GenProd, InvPost, VatProd, false);
 
-        Created += CreateExampleItem('PIM-COKE-GLS-05', 'Coca Cola Glass 0.5 L', 'COKE-GLS', "PIM Family Member Role"::"Default Item", '', '0.5 L', BottleUOM, GenProd, InvPost, VatProd, true);
-        Created += CreateExampleItem('PIM-COKE-GLS-033', 'Coca Cola Glass 0.33 L', 'COKE-GLS', "PIM Family Member Role"::Variant, 'PIM-COKE-GLS-05', '0.33 L', BottleUOM, GenProd, InvPost, VatProd, false);
-        Created += CreateExampleItem('PIM-COKE-GLS-01', 'Coca Cola Glass 0.1 L', 'COKE-GLS', "PIM Family Member Role"::Variant, 'PIM-COKE-GLS-05', '0.1 L', BottleUOM, GenProd, InvPost, VatProd, false);
-        Created += CreateExampleItem('PIM-COKE-GLS-WM', 'Coca Cola Glass 0.5 L, WM Edition, Brazil', 'COKE-GLS', "PIM Family Member Role"::Variant, 'PIM-COKE-GLS-05', '0.5 L, WM Edition, Brazil', BottleUOM, GenProd, InvPost, VatProd, false);
+        Created += CreateExampleItem('PIM-COKE-GLS', 'Coca Cola Glass 0.5 L', 'COKE-GLS', "PIM Family Member Role"::"Default Item", '', '0.5 L', BottleUOM, GenProd, InvPost, VatProd, true);
+        Created += CreateExampleNativeVariant('PIM-COKE-GLS', '033', '0.33 L', '0.33 L');
+        Created += CreateExampleNativeVariant('PIM-COKE-GLS', '01', '0.1 L', '0.1 L');
+        Created += CreateExampleNativeVariant('PIM-COKE-GLS', 'WM05', '0.5 L, WM Edition, Brazil', '0.5 L, WM Edition, Brazil');
 
-        Created += CreateExampleItem('PIM-COKE-PET-05', 'Coca Cola PET 0.5 L', 'COKE-PET', "PIM Family Member Role"::"Default Item", '', '0.5 L', BottleUOM, GenProd, InvPost, VatProd, true);
-        Created += CreateExampleItem('PIM-COKE-PET-1L', 'Coca Cola PET 1 L', 'COKE-PET', "PIM Family Member Role"::Variant, 'PIM-COKE-PET-05', '1 L', BottleUOM, GenProd, InvPost, VatProd, false);
-        Created += CreateExampleItem('PIM-COKE-PET-2L', 'Coca Cola PET 2 L', 'COKE-PET', "PIM Family Member Role"::Variant, 'PIM-COKE-PET-05', '2 L', BottleUOM, GenProd, InvPost, VatProd, false);
+        Created += CreateExampleItem('PIM-COKE-PET', 'Coca Cola PET 0.5 L', 'COKE-PET', "PIM Family Member Role"::"Default Item", '', '0.5 L', BottleUOM, GenProd, InvPost, VatProd, true);
+        Created += CreateExampleNativeVariant('PIM-COKE-PET', '1L', '1 L', '1 L');
+        Created += CreateExampleNativeVariant('PIM-COKE-PET', '2L', '2 L', '2 L');
 
-        Created += CreateExampleItem('PIM-COKE-CAN-033', 'Coca Cola Can 0.33 L', 'COKE-CAN', "PIM Family Member Role"::"Default Item", '', '0.33 L', BottleUOM, GenProd, InvPost, VatProd, true);
-        Created += CreateExampleItem('PIM-COKE-CAN-05', 'Coca Cola Can 0.5 L', 'COKE-CAN', "PIM Family Member Role"::Variant, 'PIM-COKE-CAN-033', '0.5 L', BottleUOM, GenProd, InvPost, VatProd, false);
-        Created += CreateExampleItem('PIM-COKE-CAN-01', 'Coca Cola Can 0.1 L', 'COKE-CAN', "PIM Family Member Role"::Variant, 'PIM-COKE-CAN-033', '0.1 L', BottleUOM, GenProd, InvPost, VatProd, false);
+        Created += CreateExampleItem('PIM-COKE-CAN', 'Coca Cola Can 0.33 L', 'COKE-CAN', "PIM Family Member Role"::"Default Item", '', '0.33 L', BottleUOM, GenProd, InvPost, VatProd, true);
+        Created += CreateExampleNativeVariant('PIM-COKE-CAN', '05', '0.5 L', '0.5 L');
+        Created += CreateExampleNativeVariant('PIM-COKE-CAN', '01', '0.1 L', '0.1 L');
 
         RecalculateFamilyDisplay('SOAP');
         RecalculateFamilyDisplay('COKE-GLS');
@@ -354,7 +357,7 @@ codeunit 50120 "PIM Product Family Mgt."
             exit;
 
         SyncingFromItem := true;
-        IsNew := not Member.Get(Item."PIM Product Family Code", Item."No.");
+        IsNew := not Member.Get(Item."PIM Product Family Code", Item."No.", '');
         if IsNew then begin
             Member.Init();
             Member."Product Family Code" := Item."PIM Product Family Code";
@@ -382,6 +385,8 @@ codeunit 50120 "PIM Product Family Mgt."
     begin
         if SyncingFromItem then
             exit;
+        if Member."Variant Code" <> '' then
+            exit;
         if not Item.Get(Member."Item No.") then
             exit;
 
@@ -408,6 +413,18 @@ codeunit 50120 "PIM Product Family Mgt."
     var
         Family: Record "PIM Product Family";
     begin
+        if Member."Variant Code" <> '' then begin
+            Member.Role := Member.Role::Variant;
+            Member."Is Native Variant" := true;
+            Member.Indentation := 1;
+            if Member."Parent Item No." = '' then
+                Member."Parent Item No." := Member."Item No.";
+            if Member."Variant Label" = '' then
+                Member."Variant Label" := NextVariantLabel(Member."Product Family Code", Member."Parent Item No.", Member."Item No.");
+            exit;
+        end;
+
+        Member."Is Native Variant" := false;
         if Member.Role = Member.Role::" " then
             Member.Role := Member.Role::"Default Item";
 
@@ -439,7 +456,6 @@ codeunit 50120 "PIM Product Family Mgt."
         Member.SetRange("Product Family Code", FamilyCode);
         Member.SetRange("Parent Item No.", ParentItemNo);
         Member.SetRange(Role, Member.Role::Variant);
-        Member.SetFilter("Item No.", '<>%1', CurrentItemNo);
         VariantNo := Member.Count + 1;
         exit(CopyStr(StrSubstNo('V%1', VariantNo), 1, 10));
     end;
@@ -449,7 +465,7 @@ codeunit 50120 "PIM Product Family Mgt."
         Member: Record "PIM Product Family Member";
         Family: Record "PIM Product Family";
     begin
-        if Member.Get(Item."PIM Product Family Code", Item."No.") then
+        if Member.Get(Item."PIM Product Family Code", Item."No.", '') then
             Item."PIM Variant Label" := Member."Variant Label";
         if Family.Get(Item."PIM Product Family Code") then begin
             Item."PIM Family Group Code" := Family."Family Group Code";
@@ -463,9 +479,11 @@ codeunit 50120 "PIM Product Family Mgt."
         FamilyCode: Code[20];
     begin
         Member.SetRange("Item No.", Item."No.");
-        if Member.FindFirst() then begin
-            FamilyCode := Member."Product Family Code";
-            Member.Delete(false);
+        if not Member.IsEmpty() then begin
+            FamilyCode := '';
+            if Member.FindFirst() then
+                FamilyCode := Member."Product Family Code";
+            Member.DeleteAll(false);
             RecalculateFamilyDisplay(FamilyCode);
         end;
     end;
@@ -607,5 +625,175 @@ codeunit 50120 "PIM Product Family Mgt."
         if UnitOfMeasure.Get(Preferred) then
             exit(Preferred);
         exit(Fallback);
+    end;
+
+    procedure SyncNativeVariants(ItemNo: Code[20]): Integer
+    var
+        Item: Record Item;
+        ItemVariant: Record "Item Variant";
+        Member: Record "PIM Product Family Member";
+        Synced: Integer;
+    begin
+        if not Item.Get(ItemNo) then
+            exit(0);
+        if Item."PIM Product Family Code" = '' then
+            exit(0);
+        if Item."PIM Family Role" <> Item."PIM Family Role"::"Default Item" then
+            exit(0);
+
+        ItemVariant.SetRange("Item No.", ItemNo);
+        if ItemVariant.FindSet() then
+            repeat
+                UpsertNativeVariantMember(Item."PIM Product Family Code", ItemNo, ItemVariant.Code, CopyStr(ItemVariant.Description, 1, 50));
+                Synced += 1;
+            until ItemVariant.Next() = 0;
+
+        Member.SetRange("Product Family Code", Item."PIM Product Family Code");
+        Member.SetRange("Item No.", ItemNo);
+        Member.SetRange("Is Native Variant", true);
+        if Member.FindSet() then
+            repeat
+                if Member."Variant Code" <> '' then
+                    if not ItemVariant.Get(ItemNo, Member."Variant Code") then
+                        Member.Delete(false);
+            until Member.Next() = 0;
+
+        RecalculateFamilyDisplay(Item."PIM Product Family Code");
+        exit(Synced);
+    end;
+
+    procedure FillVisualBoard(FamilyGroupCode: Code[20]; var VisualLine: Record "PIM Family Visual Line")
+    var
+        Group: Record "PIM Product Family Group";
+        Family: Record "PIM Product Family";
+        Member: Record "PIM Product Family Member";
+        SharedContent: Record "PIM Family Shared Content";
+        EntryNo: Integer;
+        SharedCount: Integer;
+        DisplayName: Text[150];
+    begin
+        VisualLine.Reset();
+        VisualLine.DeleteAll();
+        if not Group.Get(FamilyGroupCode) then
+            exit;
+
+        SharedContent.SetRange(Scope, SharedContent.Scope::"Main Product Family");
+        SharedContent.SetRange("Family Group Code", FamilyGroupCode);
+        SharedCount := SharedContent.Count;
+        EntryNo := AddVisualLine(VisualLine, EntryNo, "PIM Visual Node Type"::"Main Family", 0, 'Main Family', Group.Name, '', '', '', '', '', '', FamilyGroupCode, '', SharedCount, true);
+
+        Family.SetRange("Family Group Code", FamilyGroupCode);
+        if Family.FindSet() then
+            repeat
+                SharedContent.Reset();
+                SharedContent.SetRange(Scope, SharedContent.Scope::"Product Family");
+                SharedContent.SetRange("Product Family Code", Family.Code);
+                SharedCount := SharedContent.Count;
+                EntryNo := AddVisualLine(VisualLine, EntryNo, "PIM Visual Node Type"::"Product Family", 1, 'Family', Family.Name, Family.Classification, '', '', '', '', Family."Variant Dimension", FamilyGroupCode, Family.Code, SharedCount, true);
+
+                Member.Reset();
+                Member.SetCurrentKey("Product Family Code", "Display Order");
+                Member.SetRange("Product Family Code", Family.Code);
+                if Member.FindSet() then
+                    repeat
+                        Member.CalcFields(Description, "Variant Description", "Base Unit of Measure", "VAT Prod. Posting Group");
+                        if Member."Variant Code" <> '' then
+                            DisplayName := Member."Variant Description"
+                        else
+                            DisplayName := Member.Description;
+                        if DisplayName = '' then
+                            DisplayName := Member."Item No.";
+                        if Member.Role = Member.Role::"Default Item" then
+                            EntryNo := AddVisualLine(VisualLine, EntryNo, "PIM Visual Node Type"::"Default Item", 2, Member."Variant Label", DisplayName, Family.Classification, Member."Item No.", '', Member."Base Unit of Measure", Member."VAT Prod. Posting Group", Member."Variant Dim. Value", FamilyGroupCode, Family.Code, SharedCount, true)
+                        else
+                            EntryNo := AddVisualLine(VisualLine, EntryNo, "PIM Visual Node Type"::Variant, 3, Member."Variant Label", DisplayName, Family.Classification, Member."Item No.", Member."Variant Code", Member."Base Unit of Measure", Member."VAT Prod. Posting Group", Member."Variant Dim. Value", FamilyGroupCode, Family.Code, 0, false);
+                    until Member.Next() = 0;
+            until Family.Next() = 0;
+    end;
+
+    [EventSubscriber(ObjectType::Table, Database::"Item Variant", 'OnAfterInsertEvent', '', false, false)]
+    local procedure SyncFamilyAfterVariantInsert(var Rec: Record "Item Variant"; RunTrigger: Boolean)
+    begin
+        SyncNativeVariants(Rec."Item No.");
+    end;
+
+    [EventSubscriber(ObjectType::Table, Database::"Item Variant", 'OnAfterDeleteEvent', '', false, false)]
+    local procedure SyncFamilyAfterVariantDelete(var Rec: Record "Item Variant"; RunTrigger: Boolean)
+    begin
+        SyncNativeVariants(Rec."Item No.");
+    end;
+
+    [EventSubscriber(ObjectType::Table, Database::"Item Variant", 'OnAfterModifyEvent', '', false, false)]
+    local procedure SyncFamilyAfterVariantModify(var Rec: Record "Item Variant"; var xRec: Record "Item Variant"; RunTrigger: Boolean)
+    begin
+        SyncNativeVariants(Rec."Item No.");
+    end;
+
+    local procedure UpsertNativeVariantMember(FamilyCode: Code[20]; ItemNo: Code[20]; VariantCode: Code[10]; DimValue: Text[50])
+    var
+        Member: Record "PIM Product Family Member";
+        IsNew: Boolean;
+    begin
+        if VariantCode = '' then
+            exit;
+        IsNew := not Member.Get(FamilyCode, ItemNo, VariantCode);
+        if IsNew then begin
+            Member.Init();
+            Member."Product Family Code" := FamilyCode;
+            Member."Item No." := ItemNo;
+            Member."Variant Code" := VariantCode;
+        end;
+        Member.Role := Member.Role::Variant;
+        Member."Is Native Variant" := true;
+        Member."Parent Item No." := ItemNo;
+        Member."Variant Dim. Value" := DimValue;
+        NormalizeMember(Member);
+        if IsNew then
+            Member.Insert(false)
+        else
+            Member.Modify(false);
+    end;
+
+    local procedure CreateExampleNativeVariant(ItemNo: Code[20]; VariantCode: Code[10]; Description: Text[100]; DimValue: Text[50]): Integer
+    var
+        Item: Record Item;
+        ItemVariant: Record "Item Variant";
+    begin
+        if not Item.Get(ItemNo) then
+            exit(0);
+        if ItemVariant.Get(ItemNo, VariantCode) then begin
+            SyncNativeVariants(ItemNo);
+            exit(0);
+        end;
+        ItemVariant.Init();
+        ItemVariant."Item No." := ItemNo;
+        ItemVariant.Code := VariantCode;
+        ItemVariant.Description := Description;
+        ItemVariant.Insert(true);
+        UpsertNativeVariantMember(Item."PIM Product Family Code", ItemNo, VariantCode, DimValue);
+        exit(1);
+    end;
+
+    local procedure AddVisualLine(var VisualLine: Record "PIM Family Visual Line"; EntryNo: Integer; NodeType: Enum "PIM Visual Node Type"; Indent: Integer; Label: Text[30]; Description: Text[150]; Classification: Text[50]; ItemNo: Code[20]; VariantCode: Code[10]; UOM: Code[10]; VAT: Code[20]; DimValue: Text[50]; GroupCode: Code[20]; FamilyCode: Code[20]; SharedCount: Integer; Strong: Boolean): Integer
+    begin
+        EntryNo += 1;
+        VisualLine.Init();
+        VisualLine."Entry No." := EntryNo;
+        VisualLine."Node Type" := NodeType;
+        VisualLine."Variant Label" := Label;
+        VisualLine.Description := Description;
+        VisualLine.Classification := Classification;
+        VisualLine."Item No." := ItemNo;
+        VisualLine."Variant Code" := VariantCode;
+        VisualLine."Base Unit of Measure" := UOM;
+        VisualLine."VAT Prod. Posting Group" := VAT;
+        VisualLine."Variant Dim. Value" := DimValue;
+        VisualLine.Indentation := Indent;
+        VisualLine."Family Group Code" := GroupCode;
+        VisualLine."Product Family Code" := FamilyCode;
+        VisualLine."Shared Content Count" := SharedCount;
+        VisualLine."Style Strong" := Strong;
+        VisualLine.Insert();
+        exit(EntryNo);
     end;
 }

@@ -30,6 +30,11 @@ page 50126 "PIM Item Family Factbox"
                     Style = Strong;
                     StyleExpr = IsCurrentItem;
                 }
+                field("Variant Code"; Rec."Variant Code")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Item Variant';
+                }
                 field(Description; Rec.Description)
                 {
                     ApplicationArea = All;

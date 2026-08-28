@@ -343,31 +343,29 @@ Main Product Family (PIM Product Family Group)
 
 A family may have **several default items**. Cleaning Soap keeps Blue/Pink/Yellow **1L** as Parent + V1 + V2 (same Bottle UOM). Blue **2L**, Pink **0.5L**, and Yellow **5L** are extra default items because volume/packaging can change UOM (Bottle vs Canister). Coca Cola splits **Glass / PET / Can** into three families under one main group; volume is the variant dimension.
 
-**Do not use native `Item Variant` (5401)** for this model. Native variants are sub-SKUs of one item. These examples are separate items with their own description, UOM, and VAT, linked through `PIM Product Family Member`.
+**Use native `Item Variant` (5401)** for V1/V2 when they belong to the same default item. The Microsoft **Shopify Connector** then publishes: default Item → Shopify Product, Item Variants → Shopify Variants (**Add to Shopify**). Separate Items are only for cases that cannot share a Shopify product (different UOM such as 5L Canister).
 
-### 9.2 How to assign default items
+### 9.2 How to assign default items and native variants
 
 1. Tell Me → **PIM Product Family Groups** / **PIM Product Families** (optional: **Create Example Families**).
 2. On **Item Card** → FastTab **Product Family**, set **Product Family** and **Family Role = Default Item**.
-3. **Processing → Product Family → Add Variant** to hang another item under that default item.
-4. **Copy UOM and VAT from Default Item** copies `Base Unit of Measure` and `VAT Prod. Posting Group` to the variant.
-5. The family factbox shows the Parent / V1 / V2 list. The family card has the same indented list.
+3. Maintain **Item Variants** on that item (standard BC). **Load Item Variants** pulls them in as V1, V2.
+4. Tell Me → **Product Family Visual Board** to see Main Family → Family → Parent → V1/V2.
+5. **Add to Shopify** (Microsoft connector) on the default item: Item = Shopify product, Item Variants = Shopify variants.
 
-Full walkthrough: `PIM-Locale/PIM-Product-Family-Guide.md`.
+Full walkthrough: `PIM-Product-Family/README.md`.
 
 ### 9.3 Shared SharePoint notes and links
 
-Family members can **share** supplementary content:
+Add documents and notes once on the **Product Family Card** or **Main Product Family Card**. Every default item in that family shows them in the Item Card factbox. Variants inherit the same files; they are not stored per variant.
 
 | Shared at family level | Stored in |
 |------------------------|-----------|
-| Common datasheets | SharePoint folder / links shared across family |
-| Compliance documents | SharePoint |
-| Marketing notes | SharePoint notes or links |
+| Common datasheets | `PIM Family Shared Content` SharePoint URL |
+| Compliance documents | Same table, document kind |
+| Marketing notes | Shared Note text |
 
-**Design intent:** Avoid uploading the same PDF to every item in a family. Maintain shared links at family or group level; items **reference** or **inherit** access where the ZVG extension defines it.
-
-> **Developer note:** Implement family-level SharePoint inheritance according to ZVG table design. The PIM locale extension today focuses on **item-level** text. Family-level sharing is part of the broader ZVG SharePoint integration.
+These stay at **Shopify product** level when you use Add to Shopify. Do not attach the same PDF to every Item Variant.
 
 ### 9.4 Related Items
 

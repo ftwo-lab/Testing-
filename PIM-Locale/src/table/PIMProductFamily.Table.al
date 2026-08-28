@@ -95,8 +95,9 @@ table 50121 "PIM Product Family"
         PIMProductFamilyMember.SetRange("Product Family Code", Rec.Code);
         if PIMProductFamilyMember.FindSet() then
             repeat
-                if Item.Get(PIMProductFamilyMember."Item No.") then
-                    PIMProductFamilyMgt.ClearItemFamilyFields(Item);
+                if PIMProductFamilyMember."Variant Code" = '' then
+                    if Item.Get(PIMProductFamilyMember."Item No.") then
+                        PIMProductFamilyMgt.ClearItemFamilyFields(Item);
             until PIMProductFamilyMember.Next() = 0;
 
         PIMProductFamilyMember.DeleteAll();

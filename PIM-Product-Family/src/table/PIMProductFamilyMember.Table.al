@@ -21,8 +21,19 @@ table 50122 "PIM Product Family Member"
 
             trigger OnValidate()
             begin
-                CalcFields(Description, "Base Unit of Measure", "VAT Prod. Posting Group");
+                CalcFields(Description, "Base Unit of Measure", "VAT Prod. Posting Group", "Variant Description");
             end;
+        }
+        field(10; "Variant Code"; Code[10])
+        {
+            Caption = 'Item Variant';
+            TableRelation = "Item Variant".Code where("Item No." = field("Item No."));
+            ToolTip = 'Blank = the default item itself. Filled = a native Business Central Item Variant under that item.';
+        }
+        field(11; "Is Native Variant"; Boolean)
+        {
+            Caption = 'Native Item Variant';
+            Editable = false;
         }
         field(3; Role; Enum "PIM Family Member Role")
         {
@@ -99,17 +110,24 @@ table 50122 "PIM Product Family Member"
             CalcFormula = lookup("PIM Product Family"."Variant Dimension" where(Code = field("Product Family Code")));
             Editable = false;
         }
+        field(26; "Variant Description"; Text[100])
+        {
+            Caption = 'Variant Description';
+            FieldClass = FlowField;
+            CalcFormula = lookup("Item Variant".Description where("Item No." = field("Item No."), Code = field("Variant Code")));
+            Editable = false;
+        }
     }
 
     keys
     {
-        key(PK; "Product Family Code", "Item No.")
+        key(PK; "Product Family Code", "Item No.", "Variant Code")
         {
             Clustered = true;
         }
         key(Parent; "Product Family Code", "Parent Item No.", "Display Order") { }
         key(Display; "Product Family Code", "Display Order") { }
-        key(Item; "Item No.") { }
+        key(Item; "Item No.", "Variant Code") { }
     }
 
     trigger OnInsert()
@@ -135,10 +153,10 @@ table 50122 "PIM Product Family Member"
         ChildMember.SetRange("Product Family Code", Rec."Product Family Code");
         ChildMember.SetRange("Parent Item No.", Rec."Item No.");
         ChildMember.SetRange(Role, ChildMember.Role::Variant);
-        if not ChildMember.IsEmpty() then
+        if (Rec."Variant Code" = '') and (not ChildMember.IsEmpty()) then
             Error('Item %1 is a default item with variants. Reassign or remove the variants first.', Rec."Item No.");
 
-        if Item.Get(Rec."Item No.") then
+        if (Rec."Variant Code" = '') and Item.Get(Rec."Item No.") then
             PIMProductFamilyMgt.ClearItemFamilyFields(Item);
     end;
 }

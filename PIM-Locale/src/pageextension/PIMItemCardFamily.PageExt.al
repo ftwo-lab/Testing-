@@ -61,6 +61,20 @@ pageextension 50120 "PIM Item Card Family" extends "Item Card"
                 SubPageView = sorting("Product Family Code", "Display Order");
                 Visible = HasProductFamily;
             }
+            part(PIMFamilyShared; "PIM Item Shared Content")
+            {
+                ApplicationArea = All;
+                Caption = 'Family SharePoint / notes';
+                SubPageLink = "Product Family Code" = field("PIM Product Family Code");
+                Visible = HasProductFamily;
+            }
+            part(PIMGroupShared; "PIM Item Shared Content")
+            {
+                ApplicationArea = All;
+                Caption = 'Main family SharePoint / notes';
+                SubPageLink = "Family Group Code" = field("PIM Family Group Code"), Scope = const("Main Product Family");
+                Visible = HasProductFamily;
+            }
         }
     }
 
@@ -100,6 +114,64 @@ pageextension 50120 "PIM Item Card Family" extends "Item Card"
                         PIMProductFamilyMgt.MakeDefaultItem(Rec."No.");
                         CurrPage.Update(false);
                         Message('Item %1 is now a default item (Parent) in family %2.', Rec."No.", Rec."PIM Product Family Code");
+                    end;
+                }
+                action(PIMLoadItemVariants)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Load Item Variants';
+                    Image = ItemVariant;
+                    ToolTip = 'Show this item''s native Item Variants as V1, V2 in the product family. Add to Shopify then publishes them as Shopify variants.';
+
+                    trigger OnAction()
+                    var
+                        PIMProductFamilyMgt: Codeunit "PIM Product Family Mgt.";
+                        Loaded: Integer;
+                    begin
+                        CurrPage.SaveRecord();
+                        Rec.Get(Rec."No.");
+                        if Rec."PIM Product Family Code" = '' then
+                            Error('Assign a Product Family first.');
+                        if Rec."PIM Family Role" <> Rec."PIM Family Role"::"Default Item" then
+                            PIMProductFamilyMgt.MakeDefaultItem(Rec."No.");
+                        Loaded := PIMProductFamilyMgt.SyncNativeVariants(Rec."No.");
+                        CurrPage.Update(false);
+                        Message('%1 Item Variant(s) loaded as V1, V2 under this default item.', Loaded);
+                    end;
+                }
+                action(PIMOpenItemVariants)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Item Variants';
+                    Image = ItemVariant;
+                    RunObject = page "Item Variants";
+                    RunPageLink = "Item No." = field("No.");
+                    ToolTip = 'Maintain the native Business Central variants used by Add to Shopify.';
+                }
+                action(PIMVisualBoard)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Product Family Visual Board';
+                    Image = Hierarchy;
+
+                    trigger OnAction()
+                    var
+                        VisualBoard: Page "PIM Family Visual Board";
+                    begin
+                        VisualBoard.SetFamilyGroupCode(Rec."PIM Family Group Code");
+                        VisualBoard.Run();
+                    end;
+                }
+                action(PIMShopifyHelp)
+                {
+                    ApplicationArea = All;
+                    Caption = 'How this publishes to Shopify';
+                    Image = Export;
+                    ToolTip = 'Uses the Microsoft Shopify Connector. No second Shopify sync is added.';
+
+                    trigger OnAction()
+                    begin
+                        Message('On this default item, use the standard Add to Shopify action from the Shopify Connector. This item becomes the Shopify product. Item Variants on this item become Shopify variants. Shared family SharePoint documents and notes apply to the product, not to each variant.');
                     end;
                 }
                 action(PIMAddVariant)

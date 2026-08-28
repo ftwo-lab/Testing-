@@ -60,6 +60,12 @@ page 50123 "PIM Product Family Card"
                 SubPageLink = "Product Family Code" = field(Code);
                 SubPageView = sorting("Product Family Code", "Display Order");
             }
+            part(Shared; "PIM Family Shared ListPart")
+            {
+                ApplicationArea = All;
+                SubPageLink = "Product Family Code" = field(Code);
+                Caption = 'Shared SharePoint documents and notes';
+            }
         }
     }
 
@@ -67,6 +73,50 @@ page 50123 "PIM Product Family Card"
     {
         area(Processing)
         {
+            action(LoadItemVariants)
+            {
+                ApplicationArea = All;
+                Caption = 'Load Item Variants';
+                Image = ItemVariant;
+                ToolTip = 'Pull native Item Variants of the primary default item into this family as V1, V2, …';
+
+                trigger OnAction()
+                var
+                    PIMProductFamilyMgt: Codeunit "PIM Product Family Mgt.";
+                    Loaded: Integer;
+                begin
+                    if Rec."Primary Default Item No." = '' then
+                        Error('Set Primary Default Item No. first.');
+                    Loaded := PIMProductFamilyMgt.SyncNativeVariants(Rec."Primary Default Item No.");
+                    CurrPage.Update(false);
+                    Message('%1 Item Variant(s) are shown as V1, V2 under the default item.', Loaded);
+                end;
+            }
+            action(OpenVisualBoard)
+            {
+                ApplicationArea = All;
+                Caption = 'Visual Board';
+                Image = Hierarchy;
+
+                trigger OnAction()
+                var
+                    VisualBoard: Page "PIM Family Visual Board";
+                begin
+                    VisualBoard.SetFamilyGroupCode(Rec."Family Group Code");
+                    VisualBoard.Run();
+                end;
+            }
+            action(ShopifyHelp)
+            {
+                ApplicationArea = All;
+                Caption = 'How this publishes to Shopify';
+                Image = Export;
+
+                trigger OnAction()
+                begin
+                    Message('Do not build a second Shopify sync. Open the default item and use the Microsoft connector action Add to Shopify. That item becomes the Shopify product; its Item Variants become Shopify variants. Shared documents on this family stay at product level.');
+                end;
+            }
             action(RefreshHierarchy)
             {
                 ApplicationArea = All;

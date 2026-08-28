@@ -1,6 +1,8 @@
 # Product families, default items, and variants
 
-**Attach the AL files:** use folder `PIM-Product-Family/` (or zip `PIM-Product-Family.zip`). Copy `src/*` into `ZVG-Nonpa/src/` and follow `PIM-Product-Family/README.md` for copy paths and Item Card test steps.
+**Use native Item Variants** for V1/V2 when those SKUs already exist as **Item Variants** on the default item. Then **Add to Shopify** (Microsoft connector) publishes one Shopify product with those variants. Do not build a second Shopify sync.
+
+**Attach the AL files:** use folder `PIM-Product-Family/` (or zip `PIM-Product-Family.zip`). Copy `src/*` into `ZVG-Nonpa/src/` and follow `PIM-Product-Family/README.md`.
 
 This is how the **Cleaning Soap** and **Coca Cola** hierarchies from the product-structure examples are modelled on **standard Business Central items** (the Item Card / Item List — your default items).
 
